@@ -3,7 +3,6 @@
 Part-of-speech tagger based on Deep Learning.
 
 [![Build Status](https://travis-ci.com/mtreviso/deeptagger.svg?token=x2rssmYXXPdD5p8iqKt2&branch=master)](https://travis-ci.com/mtreviso/deeptagger)
-[![GitHub license](https://img.shields.io/github/license/mtreviso/deeptagger.svg)](https://github.com/mtreviso/deeptagger/blob/master/LICENSE)
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
 
 ## Install for development
