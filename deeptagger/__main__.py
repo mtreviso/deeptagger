@@ -22,7 +22,6 @@ opts.train_opts(parser)
 
 
 def main(options):
-
     words_field = WordsField()
     tags_field = TagsField()
     fields = [('words', words_field), ('tags', tags_field)]
@@ -72,7 +71,8 @@ def main(options):
         train_dataset, options.gpu_id, options.train_batch_size, is_train=True)
     dev_iter = build_iterator(
         dev_dataset, options.gpu_id, options.dev_batch_size, is_train=False)
-    test_iter = build_iterator(test_dataset, options.gpu_id, options.dev_batch_size, is_train=False)
+    test_iter = build_iterator(test_dataset, options.gpu_id,
+                               options.dev_batch_size, is_train=False)
 
     logging.info('Building model...')
     model = RCNN(
@@ -111,13 +111,13 @@ def main(options):
 
 
 if __name__ == '__main__':
-
     options = parser.parse_args()
     cli.configure_output(options)
     cli.configure_logger(options)
     cli.configure_seed(options)
 
     from pprint import pformat
+
     logging.info('Running with options:\n{}'.format(pformat(vars(options))))
     logging.info('Local output directory is: {}'.format(options.output_dir))
 
