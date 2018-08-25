@@ -1,0 +1,26 @@
+Criar método train:
+	Deixar escolha de datasets variavel
+	Deixar escolha de modelos variavel
+	Deixar escolha de optimizers variavel
+
+Criar método predict:
+	Faz load de um modelo 
+	Chama o predict
+	Faz avaliação
+
+Criar modelos mais complexos:
+	CNN Only
+	RNN Only (SimpleRNN -> LSTM e GRU)
+	RCNN com LSTM e GRU
+	+ CRF
+	+ Attention
+
+Adicionar word embeddings do ELMO
+
+Adicionar regularização:
+	Dropout depois de quais camadas?
+	BatchNormalization?
+	l1 l2?
+
+Testar com embeddings do carioca
+Testar com diferentes word embeddings

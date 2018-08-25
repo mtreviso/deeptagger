@@ -1,0 +1,16 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+torch = "==0.4.1"
+torchtext = {ref = "7f0ed40229d680e64dc3fefbb39f2dccc255eb07", git = "git://github.com/pytorch/text.git"}
+numpy = "==1.15.0"
+
+[dev-packages]
+"flake8" = "==3.5.0"
+bumpversion = "==0.5.3"
+pytest = "==3.7.1"
+pytest-xdist = "==1.22.5"
+polyglot = "*"
