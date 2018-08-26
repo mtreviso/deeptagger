@@ -1,5 +1,5 @@
 from collections import defaultdict
-import torchtext
+from torchtext.vocab import Vocab
 import warnings
 from deeptagger.constants import UNK_ID, UNK, PAD, START, STOP
 
@@ -8,7 +8,7 @@ def _default_unk_index():
     return UNK_ID  # should be zero
 
 
-class Vocabulary(torchtext.vocab.Vocab):
+class Vocabulary(Vocab):
     """Defines a vocabulary object that will be used to numericalize a field.
 
     Attributes:
@@ -93,10 +93,13 @@ class Vocabulary(torchtext.vocab.Vocab):
             else:
                 self.itos.append(word)
 
+        self.orig_stoi = defaultdict(_default_unk_index)
+        self.orig_stoi.update({tok: i for i, tok in enumerate(self.itos)})
+
         if add_vectors_vocab:
-            if max_size is not None and\
-               sum(v.stoi for v in vectors) +\
-               len(self.itos) > max_size:
+            if max_size is not None and \
+                sum(v.stoi for v in vectors) + \
+                    len(self.itos) > max_size:
                 warnings.warn('Adding the vectors vocabulary will make '
                               'len(vocab) > max_vocab_size!')
             vset = set()
@@ -110,6 +113,9 @@ class Vocabulary(torchtext.vocab.Vocab):
         self.stoi.update({tok: i for i, tok in enumerate(self.itos)})
 
         self.vectors = None
+        self.vectors_words = set()
+        for v in vectors:
+            self.vectors_words.update(v.stoi.keys())
         if vectors is not None:
             self.load_vectors(vectors, unk_init=unk_init, cache=vectors_cache)
         else:

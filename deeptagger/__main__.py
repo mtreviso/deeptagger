@@ -11,7 +11,7 @@ from deeptagger.fields import WordsField, TagsField
 from deeptagger.dataset import PoSDataset
 from deeptagger.vectors import AvailableEmbeddings
 from deeptagger.models.rcnn import RCNN
-from deeptagger.models.simple_lstm import SimpleLSTM
+# from deeptagger.models.simple_lstm import SimpleLSTM
 from deeptagger.trainer import Trainer
 
 parser = argparse.ArgumentParser(description='DeepTagger')
@@ -55,7 +55,8 @@ def main(options):
     words_field.build_vocab(train_dataset,
                             vectors=vectors,
                             min_freq=options.vocab_min_frequency,
-                            rare_with_vectors=options.keep_rare_with_vectors)
+                            rare_with_vectors=options.keep_rare_with_embedding,
+                            add_vectors_vocab=options.add_embeddings_vocab)
     tags_field.build_vocab(train_dataset, dev_dataset, test_dataset)
 
     # set padding ids to their correct values

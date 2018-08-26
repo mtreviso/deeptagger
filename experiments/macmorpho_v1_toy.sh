@@ -9,4 +9,8 @@ python3 -m deeptagger --train-path "data/corpus/pt/macmorpho_v1_toy/train.txt" \
 					  --embeddings-path "data/embeddings/polyglot/pt/embeddings_pkl.tar.bz2" \
 					  --output-dir "runs/testing-macmorpho_v1_toy/" \
 					  --train-batch-size 128 \
-					  --dev-batch-size 128
+					  --dev-batch-size 128 \
+					  --save-best-only \
+					  --early-stopping-patience 3 \
+					  --restore-best-model
+

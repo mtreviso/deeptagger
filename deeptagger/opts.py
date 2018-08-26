@@ -87,7 +87,7 @@ def preprocess_opts(parser):
                        default=1,
                        help='Min word frequency for vocabulary.')
 
-    group.add_argument('--keep-rare-with-vectors',
+    group.add_argument('--keep-rare-with-embedding',
                        action='store_true',
                        help='Keep words that occur less then min-frequency '
                             'but are in embeddings vocabulary.')
@@ -132,10 +132,34 @@ def train_opts(parser):
                        type=int,
                        default=64,
                        help='Maximum batch size for evaluating.')
+
+    group.add_argument('--dev-checkpoint-epochs',
+                       type=int,
+                       default=1,
+                       help='Perform an evaluation on dev set after X epochs.')
+
     group.add_argument('--save-checkpoint-epochs',
                        type=int,
                        default=1,
                        help='Save a checkpoint every X epochs.')
+
+    group.add_argument('--save-best-only',
+                       action='store_true',
+                       help='Save only when validation loss is improved.')
+
+    group.add_argument('--early-stopping-patience',
+                       type=int,
+                       default=0,
+                       help='Stop training if validation loss is not '
+                            'improved after passing X epochs. By default'
+                            'the early stopping procedure is not applied.')
+
+    group.add_argument('--restore-best-model',
+                       action='store_true',
+                       help='Whether to restore the model state from '
+                            'the epoch with the best validation loss found. '
+                            'If False, the model state obtained at the last '
+                            'step of training is used.')
 
     # Optimization options
     group = parser.add_argument_group('training-optimization')

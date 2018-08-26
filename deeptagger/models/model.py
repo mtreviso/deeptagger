@@ -65,12 +65,11 @@ class Model(nn.Module):
     def predict(self, featured_sample):
         pass
 
-    @abstractmethod
     def extract_features(self, dataset):
         """
         :param dataset: torchtext.Dataset object
         """
-        pass
+        raise NotImplementedError
 
     def load(self, path):
         logging.debug("Loading model weights from {}".format(path))
