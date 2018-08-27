@@ -27,12 +27,26 @@ First, clone DeepTagger using `git`:
 git clone https://github.com/mtreviso/deeptagger.git
 ```
 
- Then, `cd` to the DeepTagger folder and run the install 
- command:
+ Then, `cd` to the DeepTagger folder:
 ```sh
 cd deeptagger
+```
+
+Automatically create a Python virtualenv and install all dependencies 
+using `pipenv install`. And then activate the virtualenv with `pipenv shell`:
+```sh
+pip install pipenv
+pipenv install
+pipenv shell
+```
+
+Run the install command:
+```sh
 python setup.py install
 ```
+
+Please note that since Python 3 is required, all the above commands (pip/python) 
+have to be the Python 3 version.
 
 ## Getting started
 
