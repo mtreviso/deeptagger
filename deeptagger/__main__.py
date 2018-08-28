@@ -59,7 +59,7 @@ def main(options):
                             add_vectors_vocab=options.add_embeddings_vocab)
     tags_field.build_vocab(train_dataset, dev_dataset, test_dataset)
 
-    # set padding ids to their correct values
+    # ensuring padding ids to their correct values
     constants.PAD_ID = words_field.vocab.stoi[constants.PAD]
     constants.TAGS_PAD_ID = tags_field.vocab.stoi[constants.PAD]
 

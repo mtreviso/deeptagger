@@ -6,6 +6,19 @@ from torch.nn.utils.rnn import pad_packed_sequence as unpack
 from torch.nn.utils.rnn import pack_padded_sequence as pack
 
 
+def unmask(tensor, mask):
+    """
+    tensor and mask should have the same shape
+    :param tensor: a torch.tensor object
+    :param mask: a torch.tensor object with 1 indicating a valid position
+                 and 0 elsewhere
+    :return: a list of lists with variable length
+    """
+    assert(tensor.shape == mask.shape)
+    lengths = mask.int().sum(dim=-1).tolist()
+    return [x[: lengths[i]].tolist() for i, x in enumerate(tensor)]
+
+
 def unroll(list_of_lists, rec=False):
     """
     :param list_of_lists: a list that contains lists

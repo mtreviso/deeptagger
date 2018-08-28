@@ -16,12 +16,12 @@ and English. You can download them in the following links:
 - [PT-BR](http://mtreviso.github.io/deeptagger-ptbr-models)
 - [EN](http://mtreviso.github.io/deeptagger-en-models)
  
-See next how to install and use it.
+See next how to install and use DeepTagger.
 
 
 ## Installation
 
-First, clone DeepTagger using `git`:
+First, clone this repository using `git`:
 
 ```sh
 git clone https://github.com/mtreviso/deeptagger.git
@@ -54,7 +54,6 @@ have to be the Python 3 version.
 
 ```python
 import deeptagger
-
 model = deeptagger.load('path/to/saved-model-dir/')
 tags, probs = model.predict('The lazy fox jumps over the lazy dog.')
 ```
@@ -65,7 +64,6 @@ floats.
 #### Training a PoS tagger model
 ```python
 import deeptagger
-
 args = {
   train_path: "path/to/train.txt",
   dev_path: "path/to/dev.txt",

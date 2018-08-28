@@ -1,64 +1,137 @@
-from deeptagger.models.utils import unroll
-import torch
+from collections import namedtuple
+
 import numpy as np
+import torch
+
+from deeptagger import constants
+from deeptagger.models.utils import unroll, unmask
+
+BestValueEpoch = namedtuple('BestValueEpoch', ['value', 'epoch'])
 
 
 class Stats(object):
 
-    def __init__(self, train_vocabulary=None, mask_id=-1):
-        self.train_vocabulary = train_vocabulary
+    def __init__(self,
+                 train_vocab=None,
+                 emb_vocab=None,
+                 mask_id=constants.PAD_ID):
+        """
+        :param train_vocab: a set object with words found in training data
+        :param emb_vocab: a set object with words found in embeddings data
+        :param mask_id: constant used for masking tags
+        """
+        self.train_vocab = train_vocab
+        self.emb_vocab = emb_vocab
         self.mask_id = mask_id
-        self.loss = 0
-        self.acc = 0
-        self.acc_oov = 0
-        self.acc_emb = 0
+
+        # this attrs will be updated every time a new prediciton is added
         self.pred_classes = []
         self.pred_probs = []
         self.golds = []
 
-    def reset(self):
+        # this attrs will be set when get_ methods are called
         self.loss = 0
+        self.acc = None
+        self.acc_oov = None
+        self.acc_emb = None
+        self.best_acc = BestValueEpoch(value=0, epoch=0)
+        self.best_acc_oov = BestValueEpoch(value=0, epoch=0)
+        self.best_acc_emb = BestValueEpoch(value=0, epoch=0)
+        self.best_loss = BestValueEpoch(value=np.Inf, epoch=0)
+
+        # private (used for lazy calculation)
+        self._flattened_preds = None
+        self._flattened_golds = None
+
+    def reset(self):
         self.pred_classes.clear()
         self.pred_probs.clear()
         self.golds.clear()
-
-    @staticmethod
-    def unmask(tensor, mask):
-        lengths = mask.int().sum(dim=-1).tolist()
-        return [x[: lengths[i]].tolist() for i, x in enumerate(tensor)]
+        self.loss = 0
+        self.acc = None
+        self.acc_oov = None
+        self.acc_emb = None
+        self.best_acc = BestValueEpoch(value=0, epoch=0)
+        self.best_acc_oov = BestValueEpoch(value=0, epoch=0)
+        self.best_acc_emb = BestValueEpoch(value=0, epoch=0)
+        self.best_loss = BestValueEpoch(value=np.Inf, epoch=0)
+        self._flattened_preds = None
+        self._flattened_golds = None
 
     @property
-    def nb_of_batches(self):
+    def nb_batches(self):
         return len(self.golds)
 
-    def add(self, loss, preds, golds, words=None):
+    def add(self, loss, preds, golds):
         mask = golds != self.mask_id
         pred_probs = torch.exp(preds)
         pred_classes = pred_probs.argmax(dim=-1)
         self.loss += loss
-        self.pred_probs.append(unroll(self.unmask(pred_probs, mask)))
-        self.pred_classes.append(unroll(self.unmask(pred_classes, mask)))
-        self.golds.append(unroll(self.unmask(golds, mask)))
+        self.pred_probs.append(unroll(unmask(pred_probs, mask)))
+        self.pred_classes.append(unroll(unmask(pred_classes, mask)))
+        self.golds.append(unroll(unmask(golds, mask)))
 
-    def accuracy(self):
-        flattened_preds = np.array(unroll(self.pred_classes))
-        flattened_golds = np.array(unroll(self.golds))
-        self.acc = (flattened_preds == flattened_golds).mean()
+    def get_loss(self):
+        return self.loss / self.nb_batches
+
+    def _get_bins(self):
+        if self._flattened_preds is None:
+            self._flattened_preds = np.array(unroll(self.pred_classes))
+        if self._flattened_golds is None:
+            self._flattened_golds = np.array(unroll(self.golds))
+        return self._flattened_preds == self._flattened_golds
+
+    def get_acc(self):
+        if self.acc is None:
+            bins = self._get_bins()
+            self.acc = bins.mean()
         return self.acc
 
-    def accuracy_oov(self, train_vocabulary):
+    def get_acc_oov(self, words):
+        if self.acc_oov is None:
+            idx = [i for i, w in enumerate(unroll(words))
+                   if w in self.train_vocab]
+            bins = self._get_bins()
+            self.acc_oov = bins[idx].mean()
         return self.acc_oov
 
-    def accuracy_emb(self, emb_vocabulary):
+    def get_acc_emb(self, words):
+        if self.acc_emb is None:
+            idx = [i for i, w in enumerate(unroll(words))
+                   if w in self.emb_vocab]
+            bins = self._get_bins()
+            self.acc_emb = bins[idx].mean()
         return self.acc_emb
 
-    def final_loss(self):
-        return self.loss / self.nb_of_batches
+    def calc(self, current_epoch, words):
+        current_loss = self.get_loss()
+        current_acc = self.get_acc()
+        current_acc_oov = self.get_acc_oov(words)
+        current_acc_emb = self.get_acc_emb(words)
 
-    def get(self, metric):
-        if metric == 'loss':
-            return self.final_loss()
-        elif metric == 'acc':
-            return self.accuracy()
-        else:
-            raise Exception('Metric not available.')
+        if current_loss < self.best_loss.value:
+            self.best_loss.value = current_loss
+            self.best_loss.epoch = current_epoch
+
+        if current_acc > self.best_acc.value:
+            self.best_acc.value = current_acc
+            self.best_acc.epoch = current_epoch
+
+        if current_acc_oov > self.best_acc_oov:
+            self.best_acc_oov.value = current_acc_oov
+            self.best_acc_oov.epoch = current_epoch
+
+        if current_acc_emb > self.best_acc_emb:
+            self.best_acc_emb.value = current_acc_emb
+            self.best_acc_emb.epoch = current_epoch
+
+    def to_dict(self):
+        return {
+            'acc': self.acc,
+            'acc_oov': self.acc_oov,
+            'acc_emb': self.acc_emb,
+            'loss': self.loss,
+            'best_acc': self.best_acc,
+            'best_acc_oov': self.best_acc_oov,
+            'best_acc_emb': self.best_acc_emb,
+        }

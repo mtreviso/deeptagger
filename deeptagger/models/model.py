@@ -46,7 +46,7 @@ class Model(nn.Module):
         predicted = pred.reshape(-1, self.nb_classes)
 
         # Ensure y is a tensor
-        y = torch.tensor(target.tags)
+        y = torch.tensor(target)
 
         # (bs*ts, )
         y = y.reshape(-1)

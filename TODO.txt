@@ -3,9 +3,6 @@ Melhorar o stats:
     Zerar ele no inicio do treino e ir acumulando ate o fim
     Passar o stats para os metodos de report e checkpoint
 
-Atualizar README:
-    Colocar as dependencias e como instalar
-
 Criar método train:
 	Deixar escolha de datasets variavel
 	Deixar escolha de modelos variavel
