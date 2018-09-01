@@ -165,7 +165,6 @@ def train_opts(parser):
                        help='Whether to report a table with the stats history '
                             'for train/dev/test set after training.')
 
-
     # Optimization options
     group = parser.add_argument_group('training-optimization')
     group.add_argument('--optimizer',

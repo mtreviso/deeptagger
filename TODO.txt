@@ -1,8 +1,3 @@
-Melhorar o stats:
-    Criar um objeto Stats para train, dev e test
-    Zerar ele no inicio do treino e ir acumulando ate o fim
-    Passar o stats para os metodos de report e checkpoint
-
 Criar método train:
 	Deixar escolha de datasets variavel
 	Deixar escolha de modelos variavel

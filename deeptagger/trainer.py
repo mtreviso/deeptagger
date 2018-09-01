@@ -49,10 +49,10 @@ class Trainer:
                                  mask_id=constants.TAGS_PAD_ID)
         self.train_stats_history = []
         self.dev_stats = Stats(train_vocab=train_vocab, emb_vocab=emb_vocab,
-                                 mask_id=constants.TAGS_PAD_ID)
+                               mask_id=constants.TAGS_PAD_ID)
         self.dev_stats_history = []
         self.test_stats = Stats(train_vocab=train_vocab, emb_vocab=emb_vocab,
-                                 mask_id=constants.TAGS_PAD_ID)
+                                mask_id=constants.TAGS_PAD_ID)
         self.test_stats_history = []
 
     def train(self):
