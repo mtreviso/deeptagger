@@ -1,22 +1,12 @@
 import logging
+import time
 from pathlib import Path
 
 import torch
 
 from deeptagger import constants
+from deeptagger.report import report_progress, report_stats, report_stats_final
 from deeptagger.stats import Stats
-
-
-def report_stats_final(stats):
-    raise NotImplementedError
-
-
-def report_stats(stats):
-    raise NotImplementedError
-
-
-def report_progress(i, n, loss):
-    print('Loss ({}/{}): {:.4f}'.format(i, n, loss), end='\r')
 
 
 def indexes_to_words(indexes, itos):
@@ -35,7 +25,8 @@ class Trainer:
         optimizer,
         options,
         dev_iter=None,
-        test_iter=None
+        test_iter=None,
+        final_report=False,
     ):
         self.model = model
         self.train_iter = train_iter
@@ -50,20 +41,26 @@ class Trainer:
         self.early_stopping_patience = options.early_stopping_patience
         self.restore_best_model = options.restore_best_model
         self.current_epoch = 1
+        self.final_report = final_report
 
         train_vocab = train_iter.dataset.fields['words'].vocab.orig_stoi
         emb_vocab = train_iter.dataset.fields['words'].vocab.vectors_words
-        self.train_stats = Stats(train_vocab=train_vocab, emb_vocab=emb_vocab)
+        self.train_stats = Stats(train_vocab=train_vocab, emb_vocab=emb_vocab,
+                                 mask_id=constants.TAGS_PAD_ID)
         self.train_stats_history = []
-        self.dev_stats = Stats(train_vocab=train_vocab, emb_vocab=emb_vocab)
+        self.dev_stats = Stats(train_vocab=train_vocab, emb_vocab=emb_vocab,
+                                 mask_id=constants.TAGS_PAD_ID)
         self.dev_stats_history = []
-        self.test_stats = Stats(train_vocab=train_vocab, emb_vocab=emb_vocab)
+        self.test_stats = Stats(train_vocab=train_vocab, emb_vocab=emb_vocab,
+                                 mask_id=constants.TAGS_PAD_ID)
         self.test_stats_history = []
 
     def train(self):
 
+        start_time = time.time()
         for epoch in range(self.current_epoch, self.epochs + 1):
             logging.info('Epoch {} of {}'.format(epoch, self.epochs))
+            self.current_epoch = epoch
 
             # Train a single epoch
             logging.info('Training...')
@@ -86,7 +83,7 @@ class Trainer:
             if self.save_best_only:
                 if self.dev_stats.best_acc.epoch == epoch:
                     logging.info('Accuracy improved '
-                                 'on epoch {}.'.format(epoch))
+                                 'on epoch {}'.format(epoch))
                     self.save(epoch)
             else:
                 # Otherwise, save if a checkpoint was reached
@@ -97,18 +94,27 @@ class Trainer:
             # Stop training before the total number of epochs
             if self.early_stopping_patience > 0:
                 # Only stop if the desired patience epochs was reached
-                if epoch - self.dev_stats.best_acc.epoch == self.early_stopping_patience:  # NOQA
-                    logging.info('Stop training. No improvement on acc after '
-                                 '{} epochs.'.format(epoch - self.dev_stats.best_acc.epoch))  # NOQA
+                passed_epochs = epoch - self.dev_stats.best_acc.epoch
+                if passed_epochs == self.early_stopping_patience:
+                    logging.info('Stop training! No improvement on accuracy '
+                                 'after {} epochs'.format(passed_epochs))
                     if self.restore_best_model:
                         self.restore_epoch(self.dev_stats.best_acc.epoch)
                     break
 
-        report_stats_final(self.train_stats)
-        if self.dev_iter:
-            report_stats_final(self.dev_stats)
-        if self.test_iter:
-            report_stats_final(self.test_stats)
+        elapsed = time.time() - start_time
+        hms = time.strftime("%Hh:%Mm:%Ss", time.gmtime(elapsed))
+        logging.info('Training ended after {}'.format(hms))
+
+        if self.final_report:
+            logging.info('Training final report: ')
+            report_stats_final(self.train_stats_history)
+            if self.dev_iter:
+                logging.info('Dev final report: ')
+                report_stats_final(self.dev_stats_history)
+            if self.test_iter:
+                logging.info('Test final report: ')
+                report_stats_final(self.test_stats_history)
 
     def train_epoch(self):
         self.model.train()

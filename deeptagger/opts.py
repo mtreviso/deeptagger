@@ -161,6 +161,11 @@ def train_opts(parser):
                             'If False, the model state obtained at the last '
                             'step of training is used.')
 
+    group.add_argument('--final-report', action='store_true',
+                       help='Whether to report a table with the stats history '
+                            'for train/dev/test set after training.')
+
+
     # Optimization options
     group = parser.add_argument_group('training-optimization')
     group.add_argument('--optimizer',

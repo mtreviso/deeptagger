@@ -6,7 +6,13 @@ import torch
 from deeptagger import constants
 from deeptagger.models.utils import unroll, unmask
 
-BestValueEpoch = namedtuple('BestValueEpoch', ['value', 'epoch'])
+
+class BestValueEpoch:
+    __slots__ = ['value', 'epoch']
+
+    def __init__(self, value, epoch):
+        self.value = value
+        self.epoch = epoch
 
 
 class Stats(object):
@@ -87,7 +93,7 @@ class Stats(object):
             self.acc = bins.mean()
         return self.acc
 
-    def get_acc_oov(self, words):
+    def get_acc_oov(self, words=None):
         if self.acc_oov is None:
             idx = [i for i, w in enumerate(unroll(words))
                    if w in self.train_vocab]
@@ -95,7 +101,7 @@ class Stats(object):
             self.acc_oov = bins[idx].mean()
         return self.acc_oov
 
-    def get_acc_emb(self, words):
+    def get_acc_emb(self, words=None):
         if self.acc_emb is None:
             idx = [i for i, w in enumerate(unroll(words))
                    if w in self.emb_vocab]
@@ -104,6 +110,8 @@ class Stats(object):
         return self.acc_emb
 
     def calc(self, current_epoch, words):
+        specials = [constants.PAD, constants.START, constants.STOP]
+        words = list(filter(lambda w: w not in specials, unroll(words)))
         current_loss = self.get_loss()
         current_acc = self.get_acc()
         current_acc_oov = self.get_acc_oov(words)
@@ -117,21 +125,22 @@ class Stats(object):
             self.best_acc.value = current_acc
             self.best_acc.epoch = current_epoch
 
-        if current_acc_oov > self.best_acc_oov:
+        if current_acc_oov > self.best_acc_oov.value:
             self.best_acc_oov.value = current_acc_oov
             self.best_acc_oov.epoch = current_epoch
 
-        if current_acc_emb > self.best_acc_emb:
+        if current_acc_emb > self.best_acc_emb.value:
             self.best_acc_emb.value = current_acc_emb
             self.best_acc_emb.epoch = current_epoch
 
     def to_dict(self):
         return {
-            'acc': self.acc,
-            'acc_oov': self.acc_oov,
-            'acc_emb': self.acc_emb,
-            'loss': self.loss,
+            'loss': self.get_loss(),
+            'acc': self.get_acc(),
+            'acc_oov': self.get_acc_oov(),
+            'acc_emb': self.get_acc_emb(),
+            'best_loss': self.best_loss,
             'best_acc': self.best_acc,
             'best_acc_oov': self.best_acc_oov,
-            'best_acc_emb': self.best_acc_emb,
+            'best_acc_emb': self.best_acc_emb
         }

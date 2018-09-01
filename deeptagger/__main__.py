@@ -106,7 +106,8 @@ def main(options):
         optimizer,
         options,
         dev_iter=dev_iter,
-        test_iter=test_iter
+        test_iter=test_iter,
+        final_report=options.final_report
     )
     trainer.train()
 

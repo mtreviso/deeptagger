@@ -12,5 +12,6 @@ python3 -m deeptagger --train-path "data/corpus/pt/macmorpho_v1_toy/train.txt" \
 					  --dev-batch-size 128 \
 					  --save-best-only \
 					  --early-stopping-patience 3 \
-					  --restore-best-model
+					  --restore-best-model \
+					  --final-report
 
