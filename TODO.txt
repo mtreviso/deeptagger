@@ -5,6 +5,8 @@ Criar método predict:
 
 Adicionar features de sufixo, prefixo e capitalizacao
 
+Scripts para plotar loss/acc em relacao as epocas
+
 Criar modelos mais complexos:
 	CNN Only
 	RNN Only (SimpleRNN -> LSTM e GRU)

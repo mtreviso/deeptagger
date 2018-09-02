@@ -6,8 +6,6 @@ from deeptagger.models.utils import unroll, unmask
 
 
 class BestValueEpoch:
-    __slots__ = ['value', 'epoch']
-
     def __init__(self, value, epoch):
         self.value = value
         self.epoch = epoch
@@ -18,7 +16,7 @@ class Stats(object):
     def __init__(self,
                  train_vocab=None,
                  emb_vocab=None,
-                 mask_id=constants.PAD_ID):
+                 mask_id=constants.TAGS_PAD_ID):
         """
         :param train_vocab: a set object with words found in training data
         :param emb_vocab: a set object with words found in embeddings data
@@ -32,13 +30,15 @@ class Stats(object):
         self.pred_classes = []
         self.pred_probs = []
         self.golds = []
+        self.loss = 0
 
         # this attrs will be set when get_ methods are called
-        self.loss = 0
         self.acc = None
         self.acc_oov = None
         self.acc_emb = None
         self.acc_sent = None
+
+        # this attrs will be se when calc method is called
         self.best_acc = BestValueEpoch(value=0, epoch=0)
         self.best_acc_oov = BestValueEpoch(value=0, epoch=0)
         self.best_acc_emb = BestValueEpoch(value=0, epoch=0)
@@ -48,21 +48,20 @@ class Stats(object):
         # private (used for lazy calculation)
         self._flattened_preds = None
         self._flattened_golds = None
+        self._pred_classes_sent = []
+        self._golds_sent = []
 
     def reset(self):
         self.pred_classes.clear()
         self.pred_probs.clear()
+        self._pred_classes_sent.clear()
+        self._golds_sent.clear()
         self.golds.clear()
         self.loss = 0
         self.acc = None
         self.acc_oov = None
         self.acc_emb = None
         self.acc_sent = None
-        self.best_acc = BestValueEpoch(value=0, epoch=0)
-        self.best_acc_oov = BestValueEpoch(value=0, epoch=0)
-        self.best_acc_emb = BestValueEpoch(value=0, epoch=0)
-        self.best_acc_sent = BestValueEpoch(value=0, epoch=0)
-        self.best_loss = BestValueEpoch(value=np.Inf, epoch=0)
         self._flattened_preds = None
         self._flattened_golds = None
 
@@ -76,8 +75,10 @@ class Stats(object):
         pred_classes = pred_probs.argmax(dim=-1)
         self.loss += loss
         self.pred_probs.append(unroll(unmask(pred_probs, mask)))
-        self.pred_classes.append(unroll(unmask(pred_classes, mask)))
-        self.golds.append(unroll(unmask(golds, mask)))
+        self._pred_classes_sent.append(unmask(pred_classes, mask))
+        self.pred_classes.append(unroll(self._pred_classes_sent[-1]))
+        self._golds_sent.append(unmask(golds, mask))
+        self.golds.append(unroll(self._golds_sent[-1]))
 
     def get_loss(self):
         return self.loss / self.nb_batches
@@ -100,7 +101,7 @@ class Stats(object):
             idx = [i for i, w in enumerate(unroll(words))
                    if w not in self.train_vocab or w == constants.UNK]
             if len(idx) == 0:
-                self.acc_oov = np.Inf
+                self.acc_oov = 1.0
                 return self.acc_oov
             bins = self._get_bins()
             self.acc_oov = bins[idx].mean()
@@ -111,7 +112,7 @@ class Stats(object):
             idx = [i for i, w in enumerate(unroll(words))
                    if w not in self.emb_vocab and w != constants.UNK]
             if len(idx) == 0:
-                self.acc_emb = np.Inf
+                self.acc_emb = 1.0
                 return self.acc_emb
             bins = self._get_bins()
             self.acc_emb = bins[idx].mean()
@@ -119,7 +120,10 @@ class Stats(object):
 
     def get_acc_sentence(self):
         if self.acc_sent is None:
-            bins = [x == y for x, y in zip(self.pred_classes, self.golds)]
+            bins = []
+            for bx, by in zip(self._pred_classes_sent, self._golds_sent):
+                for sentx, senty in zip(bx, by):
+                    bins.append(sentx == senty)
             self.acc_sent = np.mean(bins)
         return self.acc_sent
 
