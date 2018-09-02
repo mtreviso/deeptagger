@@ -45,6 +45,7 @@ def run(options):
     logging.info('Building vocabulary using only train data...')
     words_field.build_vocab(train_dataset,
                             vectors=vectors,
+                            max_size=options.vocab_size,
                             min_freq=options.vocab_min_frequency,
                             rare_with_vectors=options.keep_rare_with_embedding,
                             add_vectors_vocab=options.add_embeddings_vocab)
@@ -58,7 +59,6 @@ def run(options):
     logging.info('Tags vocab size: {}'.format(len(tags_field.vocab.stoi)))
 
     logging.info('Building iterators...')
-
     train_iter = build_iterator(
         train_dataset, options.gpu_id, options.train_batch_size, is_train=True)
     dev_iter = build_iterator(

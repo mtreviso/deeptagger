@@ -1,10 +1,9 @@
-Criar método train:
-	Deixar escolha de modelos variavel
-
 Criar método predict:
 	Faz load de um modelo 
 	Chama o predict
 	Faz avaliação
+
+Adicionar features de sufixo, prefixo e capitalizacao
 
 Criar modelos mais complexos:
 	CNN Only

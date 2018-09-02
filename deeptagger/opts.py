@@ -83,7 +83,7 @@ def preprocess_opts(parser):
     group.add_argument('--vocab-size',
                        type=int,
                        default=None,
-                       help='Size of the vocabulary.')
+                       help='Max size of the vocabulary.')
     group.add_argument('--vocab-min-frequency',
                        type=int,
                        default=1,

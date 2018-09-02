@@ -18,5 +18,6 @@ python3 -m deeptagger train \
 					  --early-stopping-patience 3 \
 					  --restore-best-model \
 					  --final-report \
+					  --add-embeddings-vocab \
 
 
