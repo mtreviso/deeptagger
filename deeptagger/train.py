@@ -6,8 +6,7 @@ from deeptagger.corpus import Corpus
 from deeptagger.dataset import PoSDataset
 from deeptagger.fields import WordsField, TagsField
 from deeptagger.iterator import build_iterator
-from deeptagger.models.rcnn import RCNN
-# from deeptagger.models.simple_lstm import SimpleLSTM
+from deeptagger.models import build_model
 from deeptagger.optimizer import build_optimizer
 from deeptagger.trainer import Trainer
 from deeptagger.vectors import AvailableEmbeddings
@@ -68,28 +67,11 @@ def run(options):
                                options.dev_batch_size, is_train=False)
 
     logging.info('Building model...')
-    model = RCNN(
-        words_field,
-        tags_field,
-        prefixes_field=None,
-        suffixes_field=None,
-        caps_field=None,
-        seed=options.seed,
-        device=options.gpu_id
-    )
+    model = build_model(options, fields)
 
-    model.build(
-        word_embeddings_size=100,
-        prefix_embeddings_size=20,
-        suffix_embeddings_size=20,
-        caps_embeddings_size=6,
-        hidden_size=100,
-        dropout=0.5,
-        emb_dropout=0.0,
-        freeze_embeddings=False,
-    )
-
+    logging.info('Building optimizer...')
     optimizer = build_optimizer(options, model.parameters())
+
     trainer = Trainer(
         model,
         train_iter,

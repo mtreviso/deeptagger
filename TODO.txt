@@ -1,7 +1,5 @@
 Criar método train:
-	Deixar escolha de datasets variavel
 	Deixar escolha de modelos variavel
-	Deixar escolha de optimizers variavel
 
 Criar método predict:
 	Faz load de um modelo 

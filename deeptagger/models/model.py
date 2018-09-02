@@ -1,47 +1,45 @@
+import logging
 from abc import ABCMeta, abstractmethod
 
-import logging
 import torch
-import torch.nn as nn
 
 
-class Model(nn.Module):
+class Model(torch.nn.Module):
     __metaclass__ = ABCMeta
 
-    def __init__(
-        self,
-        batch_size=1,
-        seed=42,
-        device=None,
-        loss_weights=None,
-        loss_ignore_index=-100,
-        **kwargs
-    ):
+    def __init__(self,
+                 words_field,
+                 tags_field,
+                 prefixes_field=None,
+                 suffixes_field=None,
+                 caps_field=None):
         super().__init__()
-        self.batch_size = batch_size
+        # Default fields and embeddings
+        self.words_field = words_field
+        self.tags_field = tags_field
+        self.word_embeddings = words_field.vocab.vectors
+        # Extra features
+        self.prefixes_field = prefixes_field
+        self.suffixes_field = suffixes_field
+        self.caps_field = caps_field
+        # Building flag
         self.is_built = False
-        self.device = device
-        self.seed = seed
-        torch.manual_seed(self.seed)
-
+        # Loss function has to be defined in build()
         self._loss = None
-        self._loss_weights = loss_weights
-        if self._loss_weights:
-            self._loss_weights = torch.FloatTensor(self._loss_weights)
-        self._loss_ignore_index = loss_ignore_index
 
     @property
     def nb_classes(self):
-        """."""
         return len(self.tags_field.vocab.stoi)
 
     @property
     def words_padding_idx(self):
-        """."""
         return self.words_field.vocab.stoi[self.words_field.pad_token]
 
+    @property
+    def loss_ignore_index(self):
+        return self.tags_field.vocab.stoi[self.tags_field.pad_token]
+
     def loss(self, pred, target):
-        """."""
         # (bs*ts, nb_classes)
         predicted = pred.reshape(-1, self.nb_classes)
 
@@ -61,9 +59,9 @@ class Model(nn.Module):
     def forward(self, *args, **kwargs):
         pass
 
-    @abstractmethod
-    def predict(self, featured_sample):
-        pass
+    def predict_proba(self, batch):
+        pred = self.forward(batch)
+        return torch.exp(pred)  # assume log softmax in the output
 
     def extract_features(self, dataset):
         """

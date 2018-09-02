@@ -10,50 +10,37 @@ from deeptagger.models.model import Model
 
 class SimpleLSTM(Model):
     """Just a regular LSTM network
-
     TODO: add references.
-
     """
 
-    def __init__(
-            self,
-            words_field,
-            tags_field,
-            prefixes_field=None,
-            suffixes_field=None,
-            caps_field=None,
-            **kwargs):
-        """."""
-        super().__init__(**kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # layers
+        self.word_emb = None
+        self.dropout_emb = None
+        self.cnn_1d = None
+        self.max_pool = None
+        self.is_bidir = None
+        self.sum_bidir = None
+        self.gru = None
+        self.hidden = None
+        self.dropout_gru = None
+        self.linear_out = None
+        self.relu = None
+        self.sigmoid = None
 
-        # Default fields and embeddings
-        self.words_field = words_field
-        self.tags_field = tags_field
-        self.word_embeddings = words_field.vocab.vectors
+    def build(self, options):
+        word_embeddings_size = options.word_embeddings_size
+        # prefix_embeddings_size = options.prefix_embeddings_size
+        # suffix_embeddings_size = options.suffix_embeddings_size
+        # caps_embeddings_size = options.caps_embeddings_size
+        hidden_size = options.hidden_size[0]
+        loss_weights = None
+        if options.loss_weights == 'balanced':
+            # TODO
+            # loss_weights = calc_balanced(loss_weights, tags_field)
+            loss_weights = torch.FloatTensor(loss_weights)
 
-        # Extra features
-        self.prefixes_field = prefixes_field
-        self.suffixes_field = suffixes_field
-        self.caps_field = caps_field
-
-        # loss
-        self._loss = nn.NLLLoss(weight=self._loss_weights,
-                                ignore_index=self._loss_ignore_index)
-
-    def build(
-        self,
-        word_embeddings_size=100,
-        prefix_embeddings_size=20,
-        suffix_embeddings_size=20,
-        caps_embeddings_size=5,
-        hidden_size=100,
-        dropout=0.5,
-        emb_dropout=0.4,
-        bidirectional=True,
-        sum_bidir=False,
-        freeze_embeddings=False,
-    ):
-        """."""
         if self.word_embeddings is not None:
             word_embeddings_size = self.word_embeddings.size(1)
 
@@ -64,15 +51,15 @@ class SimpleLSTM(Model):
             _weight=self.word_embeddings,
         )
 
-        if freeze_embeddings:
+        if options.freeze_embeddings:
             self.word_emb.weight.requires_grad = False
             self.word_emb.bias.requires_grad = False
 
-        self.is_bidir = bidirectional
-        self.sum_bidir = sum_bidir
+        self.is_bidir = options.bidirectional
+        self.sum_bidir = options.sum_bidir
         self.gru = nn.LSTM(word_embeddings_size,
                            hidden_size,
-                           bidirectional=bidirectional,
+                           bidirectional=options.bidirectional,
                            batch_first=True)
         self.hidden = None
 
@@ -81,16 +68,20 @@ class SimpleLSTM(Model):
         self.linear_out = nn.Linear(n * hidden_size, self.nb_classes)
 
         self.sigmoid = torch.nn.Sigmoid()
-        self.relu = torch.nn.Relu()
-        self.dropout_emb = nn.Dropout(emb_dropout)
-        self.dropout_gru = nn.Dropout(dropout)
+        self.relu = torch.nn.ReLU()
+        self.dropout_emb = nn.Dropout(options.emb_dropout)
+        self.dropout_gru = nn.Dropout(options.dropout)
 
         self.init_weights()
 
-        # # Set model to a specific gpu device
-        if self.device is not None:
-            torch.cuda.set_device(self.device)
+        # Set model to a specific gpu device
+        if options.gpu_id is not None:
+            torch.cuda.set_device(options.gpu_id)
             self.cuda()
+
+        # Loss
+        self._loss = nn.NLLLoss(weight=loss_weights,
+                                ignore_index=self.loss_ignore_index)
 
         self.is_built = True
 

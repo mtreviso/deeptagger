@@ -226,3 +226,16 @@ def stop_to_pad(target, stop, pad):
 
     """
     return target.masked_fill(target == stop, pad)
+
+
+def indexes_to_words(indexes, itos):
+    """
+    Transofrm indexes to words using itos list
+    :param indexes: list of lists of ints
+    :param itos: list mapping integer to string
+    :return: list of lists of strs
+    """
+    words = []
+    for sample in indexes:
+        words.append([itos[i] for i in sample])
+    return words

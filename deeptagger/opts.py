@@ -1,3 +1,6 @@
+from deeptagger.models import available_models
+
+
 def general_opts(parser):
     group = parser.add_argument_group('general')
     # Output
@@ -41,7 +44,6 @@ def general_opts(parser):
 def preprocess_opts(parser):
     # Data options
     group = parser.add_argument_group('data')
-
     group.add_argument('--train-path',
                        type=str,
                        help='Path to training file')
@@ -86,7 +88,6 @@ def preprocess_opts(parser):
                        type=int,
                        default=1,
                        help='Min word frequency for vocabulary.')
-
     group.add_argument('--keep-rare-with-embedding',
                        action='store_true',
                        help='Keep words that occur less then min-frequency '
@@ -110,8 +111,106 @@ def preprocess_opts(parser):
 
 
 def model_opts(parser):
-    # Embedding Options
-    pass
+    # Models options
+    group = parser.add_argument_group('model-selection')
+    group.add_argument('--model',
+                       type=str,
+                       default='simple_lstm',
+                       choices=list(available_models.keys()),
+                       help='DeepTagger model architecture.')
+
+    group = parser.add_argument_group('hyper-parameters')
+    group.add_argument('--word-embeddings-size',
+                       type=int,
+                       default=100,
+                       help='Size of word embeddings.')
+    group.add_argument('--conv-size',
+                       type=int,
+                       default=100,
+                       help='Size of convolution 1D. '
+                            'a.k.a. number of channels.')
+    group.add_argument('--kernel-size',
+                       type=int,
+                       default=7,
+                       help='Size of the convolving kernel.')
+    group.add_argument('--pool-length',
+                       type=int,
+                       default=3,
+                       help='Size of pooling window.')
+    group.add_argument('--dropout',
+                       type=float,
+                       default=0.5,
+                       help='Dropout rate applied after RNN layers.')
+    group.add_argument('--emb-dropout',
+                       type=float,
+                       default=0.4,
+                       help='Dropout rate applied after embedding layers.')
+    group.add_argument('--bidirectional',
+                       action='store_true',
+                       help='Set RNNs to be bidirectional.')
+    group.add_argument('--sum-bidir',
+                       action='store_true',
+                       help='Sum outputs of bidirectional states. '
+                            'By default they are concatenated.')
+    group.add_argument('--freeze-embeddings',
+                       action='store_true',
+                       help='Freeze embedding weights during training.')
+    group.add_argument('--loss-weights',
+                       type=str,
+                       default='same',
+                       choices=['same', 'balanced'],
+                       help='Weights for penalize each class '
+                            'in loss calculation. `same` will give each class'
+                            'the same weights. `balanced` will give more '
+                            'weight for minority classes.')
+    group.add_argument('--hidden-size',
+                       type=int,
+                       nargs='+',
+                       default=[100],
+                       help='Number of neurons on the hidden layers. '
+                            'If you pass more sizes, then more then one '
+                            'hidden layer will be created. Please, take a '
+                            'look to the your selected model documentation '
+                            'before setting this option.')
+
+    group = parser.add_argument_group('extra-features')
+    group.add_argument('--use-prefixes',
+                       action='store_true',
+                       help='Use prefixes as feature.')
+    group.add_argument('--prefix-embeddings-size',
+                       type=int,
+                       default=100,
+                       help='Size of prefix embeddings.')
+    group.add_argument('--prefix-min-length',
+                       type=int,
+                       default=2,
+                       help='Min length of prefixes.')
+    group.add_argument('--prefix-max-length',
+                       type=int,
+                       default=2,
+                       help='Max length of prefixes.')
+    group.add_argument('--use-suffixes',
+                       action='store_true',
+                       help='Use suffixes as feature.')
+    group.add_argument('--suffix-embeddings-size',
+                       type=int,
+                       default=100,
+                       help='Size of suffix embeddings.')
+    group.add_argument('--suffix-min-length',
+                       type=int,
+                       default=2,
+                       help='Min length of suffixes.')
+    group.add_argument('--suffix-max-length',
+                       type=int,
+                       default=2,
+                       help='Max length of suffixes.')
+    group.add_argument('--use-caps',
+                       action='store_true',
+                       help='Use capitalization as feature.')
+    group.add_argument('--caps-embeddings-size',
+                       type=int,
+                       default=100,
+                       help='Size of capitalization embeddings.')
 
 
 def train_opts(parser):
@@ -132,35 +231,29 @@ def train_opts(parser):
                        type=int,
                        default=64,
                        help='Maximum batch size for evaluating.')
-
     group.add_argument('--dev-checkpoint-epochs',
                        type=int,
                        default=1,
                        help='Perform an evaluation on dev set after X epochs.')
-
     group.add_argument('--save-checkpoint-epochs',
                        type=int,
                        default=1,
                        help='Save a checkpoint every X epochs.')
-
     group.add_argument('--save-best-only',
                        action='store_true',
                        help='Save only when validation loss is improved.')
-
     group.add_argument('--early-stopping-patience',
                        type=int,
                        default=0,
                        help='Stop training if validation loss is not '
                             'improved after passing X epochs. By default'
                             'the early stopping procedure is not applied.')
-
     group.add_argument('--restore-best-model',
                        action='store_true',
                        help='Whether to restore the model state from '
                             'the epoch with the best validation loss found. '
                             'If False, the model state obtained at the last '
                             'step of training is used.')
-
     group.add_argument('--final-report', action='store_true',
                        help='Whether to report a table with the stats history '
                             'for train/dev/test set after training.')
@@ -172,40 +265,58 @@ def train_opts(parser):
                        choices=['sgd', 'adagrad', 'adadelta', 'adam',
                                 'sparseadam', 'rmsprop', 'adamax', 'asgd'],
                        help='Optimization method.')
-    group.add_argument('--learning-rate', type=float, default=None,
+    group.add_argument('--learning-rate',
+                       type=float,
+                       default=None,
                        help='Starting learning rate. '
                             'Let unseted to use default values.')
-    group.add_argument('--weight-decay', type=float, default=None,
+    group.add_argument('--weight-decay',
+                       type=float,
+                       default=None,
                        help='L2 penalty. Used for all algorithms. '
                             'Let unseted to use default values.')
-    group.add_argument('--lr-decay', type=float, default=None,
+    group.add_argument('--lr-decay',
+                       type=float,
+                       default=None,
                        help='Learning reate decay. Used only for: '
                             'adagrad. '
                             'Let unseted to use default values.')
-    group.add_argument('--rho', type=float, default=None,
+    group.add_argument('--rho',
+                       type=float,
+                       default=None,
                        help='Coefficient used for computing a running '
                             'average of squared. Used only for: '
                             'adadelta. '
                             'Let unseted to use default values.')
-    group.add_argument('--beta0', type=float, default=None,
+    group.add_argument('--beta0',
+                       type=float,
+                       default=None,
                        help='Coefficient used for computing a running '
                             'averages of gradient and its squared. '
                             'Used only for: adam, sparseadam, adamax. '
                             'Let unseted to use default values.')
-    group.add_argument('--beta1', type=float, default=None,
+    group.add_argument('--beta1',
+                       type=float,
+                       default=None,
                        help='Coefficient used for computing a running '
                             'averages of gradient and its squared. '
                             'Used only for: adam, sparseadam, adamax. '
                             'Let unseted to use default values.')
-    group.add_argument('--momentum', type=float, default=None,
+    group.add_argument('--momentum',
+                       type=float,
+                       default=None,
                        help='Momentum factor. Used only for: '
                             'sgd and rmsprop. '
                             'Let unseted to use default values.')
-    group.add_argument('--nesterov', type=float, default=None,
+    group.add_argument('--nesterov',
+                       type=float,
+                       default=None,
                        help='Enables Nesterov momentum. Used only for: '
                             'sgd. '
                             'Let unseted to use default values.')
-    group.add_argument('--alpha', type=float, default=None,
+    group.add_argument('--alpha',
+                       type=float,
+                       default=None,
                        help='Smoothing constant. Used only for: rmsprop. '
                             'Let unseted to use default values.')
 

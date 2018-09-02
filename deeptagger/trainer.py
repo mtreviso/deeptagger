@@ -7,13 +7,7 @@ import torch
 from deeptagger import constants
 from deeptagger.report import report_progress, report_stats, report_stats_final
 from deeptagger.stats import Stats
-
-
-def indexes_to_words(indexes, itos):
-    words = []
-    for sample in indexes:
-        words.append([itos[i] for i in sample])
-    return words
+from deeptagger.models.utils import indexes_to_words
 
 
 class Trainer:
@@ -45,14 +39,17 @@ class Trainer:
 
         train_vocab = train_iter.dataset.fields['words'].vocab.orig_stoi
         emb_vocab = train_iter.dataset.fields['words'].vocab.vectors_words
-        self.train_stats = Stats(train_vocab=train_vocab, emb_vocab=emb_vocab,
+        self.train_stats = Stats(train_vocab=train_vocab,
+                                 emb_vocab=emb_vocab,
                                  mask_id=constants.TAGS_PAD_ID)
-        self.train_stats_history = []
-        self.dev_stats = Stats(train_vocab=train_vocab, emb_vocab=emb_vocab,
+        self.dev_stats = Stats(train_vocab=train_vocab,
+                               emb_vocab=emb_vocab,
                                mask_id=constants.TAGS_PAD_ID)
-        self.dev_stats_history = []
-        self.test_stats = Stats(train_vocab=train_vocab, emb_vocab=emb_vocab,
+        self.test_stats = Stats(train_vocab=train_vocab,
+                                emb_vocab=emb_vocab,
                                 mask_id=constants.TAGS_PAD_ID)
+        self.train_stats_history = []
+        self.dev_stats_history = []
         self.test_stats_history = []
 
     def train(self):
