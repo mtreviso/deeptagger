@@ -19,7 +19,7 @@ and English. You can download them in the following links:
 See next how to install and use DeepTagger.
 
 
-## Installation
+## Installation 
 
 First, clone this repository using `git`:
 
@@ -55,7 +55,7 @@ have to be the Python 3 version.
 ```python
 import deeptagger
 model = deeptagger.load('path/to/saved-model-dir/')
-tags, probs = model.predict('The lazy fox jumps over the lazy dog.')
+tags, probs = model.predict('The quick brown fox jumps over the lazy dog.')
 ```
 
 Where `tags` is a list of strings and `probs` is a list of 
@@ -65,10 +65,10 @@ floats.
 ```python
 import deeptagger
 args = {
-  train_path: "path/to/train.txt",
-  dev_path: "path/to/dev.txt",
-  del_word: " ",
-  del_tag: "_"    
+  'train_path': "path/to/train.txt",
+  'dev_path': "path/to/dev.txt",
+  'del_word': " ",
+  'del_tag': "_"    
 }
 model = deeptagger.train(args)
 model.save('path/to/model-dir/')
@@ -81,12 +81,12 @@ You can view all arguments and their meaning by calling `deeptagger.help()`
 
 For predicting tags:
 ```
-python -m deeptagger predict --text "The lazy fox jumps over the lazy dog" --load path/to/saved-model-dir/
+python -m deeptagger predict --load path/to/saved-model-dir/ --text "The quick brown fox jumps over the lazy dog."
 ```
 
 For training a model:
-```python
-python -m deeptager train :args:
+```
+python -m deeptagger train :args:
 ```
 
 You can obtain more info for each command by passing the `--help` flag.

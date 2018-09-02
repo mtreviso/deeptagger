@@ -72,7 +72,7 @@ class Trainer:
                 if (self.dev_checkpoint_epochs > 0
                         and epoch % self.dev_checkpoint_epochs == 0):
                     logging.info('Evaluating...')
-                    self.eval_epoch()
+                    self.dev_epoch()
 
             # Perform an evaluation on test set if it is available
             if self.test_iter is not None:
@@ -99,7 +99,8 @@ class Trainer:
                     logging.info('Stop training! No improvement on accuracy '
                                  'after {} epochs'.format(passed_epochs))
                     if self.restore_best_model:
-                        self.restore_epoch(self.dev_stats.best_acc.epoch)
+                        if self.dev_stats.best_acc.epoch < epoch:
+                            self.restore_epoch(self.dev_stats.best_acc.epoch)
                     break
 
         elapsed = time.time() - start_time
@@ -135,7 +136,7 @@ class Trainer:
         self.train_stats_history.append(self.train_stats.to_dict())
         report_stats(self.train_stats)
 
-    def eval_epoch(self):
+    def dev_epoch(self):
         self._eval(self.dev_iter, self.dev_stats)
         self.dev_stats_history.append(self.dev_stats.to_dict())
         report_stats(self.dev_stats)

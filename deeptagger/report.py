@@ -5,9 +5,9 @@ def report_progress(i, n, loss):
     print('Loss ({}/{}): {:.4f}'.format(i, n, loss), end='\r')
 
 
-def get_line_bar(template):
-    line_head = list('-' * len(template))
-    bar_indexes = [i for i, c in enumerate(template) if c == '|']
+def get_line_bar(template_head):
+    line_head = list('-' * len(template_head))
+    bar_indexes = [i for i, c in enumerate(template_head) if c == '|']
     for i in bar_indexes:
         line_head[i] = '+'
     return ''.join(line_head)

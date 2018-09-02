@@ -168,12 +168,52 @@ def train_opts(parser):
     # Optimization options
     group = parser.add_argument_group('training-optimization')
     group.add_argument('--optimizer',
-                       default='sgd', choices=[
-                           'sgd', 'adagrad', 'adadelta', 'adam', 'sparseadam'],
+                       default='sgd',
+                       choices=['sgd', 'adagrad', 'adadelta', 'adam',
+                                'sparseadam', 'rmsprop', 'adamax', 'asgd'],
                        help='Optimization method.')
-    group.add_argument('--learning-rate',
-                       type=float,
-                       default=1.0,
+    group.add_argument('--learning-rate', type=float, default=None,
                        help='Starting learning rate. '
-                            'Recommended settings: sgd = 1, adagrad = 0.1, '
-                            'adadelta = 1, adam = 0.001')
+                            'Let unseted to use default values.')
+    group.add_argument('--weight-decay', type=float, default=None,
+                       help='L2 penalty. Used for all algorithms. '
+                            'Let unseted to use default values.')
+    group.add_argument('--lr-decay', type=float, default=None,
+                       help='Learning reate decay. Used only for: '
+                            'adagrad. '
+                            'Let unseted to use default values.')
+    group.add_argument('--rho', type=float, default=None,
+                       help='Coefficient used for computing a running '
+                            'average of squared. Used only for: '
+                            'adadelta. '
+                            'Let unseted to use default values.')
+    group.add_argument('--beta0', type=float, default=None,
+                       help='Coefficient used for computing a running '
+                            'averages of gradient and its squared. '
+                            'Used only for: adam, sparseadam, adamax. '
+                            'Let unseted to use default values.')
+    group.add_argument('--beta1', type=float, default=None,
+                       help='Coefficient used for computing a running '
+                            'averages of gradient and its squared. '
+                            'Used only for: adam, sparseadam, adamax. '
+                            'Let unseted to use default values.')
+    group.add_argument('--momentum', type=float, default=None,
+                       help='Momentum factor. Used only for: '
+                            'sgd and rmsprop. '
+                            'Let unseted to use default values.')
+    group.add_argument('--nesterov', type=float, default=None,
+                       help='Enables Nesterov momentum. Used only for: '
+                            'sgd. '
+                            'Let unseted to use default values.')
+    group.add_argument('--alpha', type=float, default=None,
+                       help='Smoothing constant. Used only for: rmsprop. '
+                            'Let unseted to use default values.')
+
+
+def predict_opts(parser):
+    # Prediction options
+    group = parser.add_argument_group('training')
+    group.add_argument('--text', type=str, default=None,
+                       help='A text to be predicted. '
+                            'The text will be splited into sentences '
+                            'ending with .?!')
