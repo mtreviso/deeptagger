@@ -14,9 +14,8 @@ def unmask(tensor, mask):
                  and 0 elsewhere
     :return: a list of lists with variable length
     """
-    assert(tensor.shape[:2] == mask.shape[:2])
     lengths = mask.int().sum(dim=-1).tolist()
-    return [x[: lengths[i]].tolist() for i, x in enumerate(tensor)]
+    return [x[:lengths[i]].tolist() for i, x in enumerate(tensor)]
 
 
 def unroll(list_of_lists, rec=False):

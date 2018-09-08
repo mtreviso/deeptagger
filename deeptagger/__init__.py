@@ -21,7 +21,7 @@ __title__ = 'DeepTagger'
 __summary__ = 'Part-of-speech tagger based on Deep Learning.'
 __uri__ = 'https://github.com/mtreviso/deeptagger'
 
-__version__ = '0.0.2-alpha'
+__version__ = '0.0.1'
 
 __author__ = 'Marcos Treviso'
 __email__ = 'marcostreviso@usp.br'

@@ -2,7 +2,7 @@ from torchtext.data import BucketIterator
 import torch
 
 
-def build_iterator(dataset, device, batch_size, is_train):
+def build(dataset, device, batch_size, is_train):
     device = None if device is None else torch.device(device)
     iterator = BucketIterator(
         dataset=dataset,

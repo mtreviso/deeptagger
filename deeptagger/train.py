@@ -1,84 +1,90 @@
 import logging
 
-
-from deeptagger import constants
-from deeptagger.corpus import Corpus
-from deeptagger.dataset import PoSDataset
-from deeptagger.fields import WordsField, TagsField
-from deeptagger.iterator import build_iterator
-from deeptagger.models import build_model
-from deeptagger.optimizer import build_optimizer
+from deeptagger import dataset
+from deeptagger import fields
+from deeptagger import iterator
+from deeptagger import models
+from deeptagger import optimizer
+from deeptagger import opts
 from deeptagger.trainer import Trainer
-from deeptagger.vectors import AvailableEmbeddings
 
 
 def run(options):
-    words_field = WordsField()
-    tags_field = TagsField()
-    fields = [('words', words_field), ('tags', tags_field)]
+    words_field = fields.WordsField()
+    tags_field = fields.TagsField()
+    fields_tuples = [('words', words_field),
+                     ('tags', tags_field)]
 
-    def filter_len(x):
-        return options.min_length <= len(x.words) <= options.max_length
+    logging.info('Building train corpus: {}'.format(options.train_path))
+    train_dataset = dataset.build(options.train_path, fields_tuples, options)
+    logging.info('Building train iterator...')
+    train_iter = iterator.build(train_dataset,
+                                options.gpu_id,
+                                options.train_batch_size,
+                                is_train=True)
 
-    logging.info('Building training corpus: {}'.format(options.train_path))
-    train_corpus = Corpus(fields, options.del_word, options.del_tag)
-    train_corpus.read(options.train_path)
-    train_dataset = PoSDataset(train_corpus, filter_pred=filter_len)
+    dev_dataset = dev_iter = None
+    if options.dev_path is not None:
+        logging.info('Building dev dataset: {}'.format(options.dev_path))
+        dev_dataset = dataset.build(options.dev_path, fields_tuples, options)
+        logging.info('Building dev iterator...')
+        dev_iter = iterator.build(dev_dataset,
+                                  options.gpu_id,
+                                  options.dev_batch_size,
+                                  is_train=False)
 
-    logging.info('Building dev dataset: {}'.format(options.dev_path))
-    dev_corpus = Corpus(fields, options.del_word, options.del_tag)
-    dev_corpus.read(options.dev_path)
-    dev_dataset = PoSDataset(dev_corpus, filter_pred=filter_len)
+    test_dataset = test_iter = None
+    if options.test_path is not None:
+        logging.info('Building test dataset: {}'.format(options.test_path))
+        test_dataset = dataset.build(options.test_path, fields_tuples, options)
+        logging.info('Building test iterator...')
+        test_iter = iterator.build(test_dataset,
+                                   options.gpu_id,
+                                   options.dev_batch_size,
+                                   is_train=False)
 
-    logging.info('Building test dataset: {}'.format(options.test_path))
-    test_corpus = Corpus(fields, options.del_word, options.del_tag)
-    test_corpus.read(options.test_path)
-    test_dataset = PoSDataset(test_corpus, filter_pred=filter_len)
+    datasets = [train_dataset, dev_dataset, test_dataset]
+    datasets = list(filter(lambda x: x is not None, datasets))
+    if options.load:
+        logging.info('Loading vocabularies...')
+        fields.load_vocabs(options.load, fields_tuples)
+        logging.info('Word vocab size: {}'.format(len(words_field.vocab)))
+        logging.info('Tag vocab size: {}'.format(len(tags_field.vocab)))
+        logging.info('Loading model...')
+        model = models.load(options.load, fields_tuples)
+        logging.info('Loading optimizer...')
+        optim = optimizer.load(options.load, model.parameters())
+    else:
+        logging.info('Building vocabulary...')
+        fields.build_vocabs(fields_tuples, train_dataset, datasets, options)
+        logging.info('Word vocab size: {}'.format(len(words_field.vocab)))
+        logging.info('Tag vocab size: {}'.format(len(tags_field.vocab)))
+        logging.info('Building model...')
+        model = models.build(options, fields_tuples)
+        logging.info('Building optimizer...')
+        optim = optimizer.build(options, model.parameters())
 
-    logging.info('Loading {} word embeddings from: {}'.format(
-        options.embeddings_format,
-        options.embeddings_path
-    ))
-    word_emb_cls = AvailableEmbeddings[options.embeddings_format]
-    vectors = word_emb_cls(options.embeddings_path, binary=False)
-
-    logging.info('Building vocabulary using only train data...')
-    words_field.build_vocab(train_dataset,
-                            vectors=vectors,
-                            max_size=options.vocab_size,
-                            min_freq=options.vocab_min_frequency,
-                            rare_with_vectors=options.keep_rare_with_embedding,
-                            add_vectors_vocab=options.add_embeddings_vocab)
-    tags_field.build_vocab(train_dataset, dev_dataset, test_dataset)
-
-    # ensuring padding ids to their correct values
-    constants.PAD_ID = words_field.vocab.stoi[constants.PAD]
-    constants.TAGS_PAD_ID = tags_field.vocab.stoi[constants.PAD]
-
-    logging.info('Words vocab size: {}'.format(len(words_field.vocab.stoi)))
-    logging.info('Tags vocab size: {}'.format(len(tags_field.vocab.stoi)))
-
-    logging.info('Building iterators...')
-    train_iter = build_iterator(
-        train_dataset, options.gpu_id, options.train_batch_size, is_train=True)
-    dev_iter = build_iterator(
-        dev_dataset, options.gpu_id, options.dev_batch_size, is_train=False)
-    test_iter = build_iterator(test_dataset, options.gpu_id,
-                               options.dev_batch_size, is_train=False)
-
-    logging.info('Building model...')
-    model = build_model(options, fields)
-
-    logging.info('Building optimizer...')
-    optimizer = build_optimizer(options, model.parameters())
-
+    logging.info('Building trainer...')
     trainer = Trainer(
-        model,
         train_iter,
-        optimizer,
+        model,
+        optim,
         options,
         dev_iter=dev_iter,
-        test_iter=test_iter,
-        final_report=options.final_report
-    )
+        test_iter=test_iter)
+
+    if options.resume_epoch and options.load is None:
+        logging.info('Resuming training...')
+        trainer.resume(options.resume_epoch)
+
     trainer.train()
+
+    if options.save:
+        logging.info('Saving config options...')
+        opts.save(options.save, options)
+        logging.info('Saving vocabularies...')
+        fields.save_vocabs(options.save, fields_tuples)
+        logging.info('Saving model...')
+        models.save(options.save, model)
+        logging.info('Saving optimizer...')
+        optimizer.save(options.save, optim)

@@ -19,5 +19,7 @@ python3 -m deeptagger train \
 					  --restore-best-model \
 					  --final-report \
 					  --add-embeddings-vocab \
+					  --epochs 2 \
+					  --save testing-toy-save
 
 

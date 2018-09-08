@@ -5,6 +5,9 @@ from pathlib import Path
 import torch
 
 from deeptagger import constants
+from deeptagger import models
+from deeptagger import optimizer
+
 from deeptagger.report import report_progress, report_stats, report_stats_final
 from deeptagger.stats import Stats
 from deeptagger.models.utils import indexes_to_words
@@ -14,13 +17,12 @@ class Trainer:
 
     def __init__(
         self,
-        model,
         train_iter,
+        model,
         optimizer,
         options,
         dev_iter=None,
-        test_iter=None,
-        final_report=False,
+        test_iter=None
     ):
         self.model = model
         self.train_iter = train_iter
@@ -35,7 +37,7 @@ class Trainer:
         self.early_stopping_patience = options.early_stopping_patience
         self.restore_best_model = options.restore_best_model
         self.current_epoch = 1
-        self.final_report = final_report
+        self.final_report = options.final_report
 
         train_vocab = train_iter.dataset.fields['words'].vocab.orig_stoi
         emb_vocab = train_iter.dataset.fields['words'].vocab.vectors_words
@@ -163,18 +165,13 @@ class Trainer:
         output_path = Path(self.output_dir, epoch_dir)
         output_path.mkdir(exist_ok=True)
         logging.info('Saving training state to {}'.format(output_path))
-        model_path = str(output_path / constants.MODEL)
-        self.model.save(model_path)
-        optimizer_path = str(output_path / constants.OPTIMIZER)
-        torch.save(self.optimizer.state_dict(), optimizer_path)
+        models.save(output_path, self.model)
+        optimizer.save(output_path, self.optimizer)
 
     def load(self, directory):
         logging.info('Loading training state from {}'.format(directory))
-        root_path = Path(directory)
-        model_path = root_path / constants.MODEL
-        self.model.load(str(model_path))
-        optimizer_path = root_path / constants.OPTIMIZER
-        self.optimizer.load_state_dict(torch.load(str(optimizer_path)))
+        models.load_state(directory, self.model)
+        optimizer.load_state(directory, self.optimizer)
 
     def restore_epoch(self, epoch):
         epoch_dir = 'epoch_{}'.format(epoch)

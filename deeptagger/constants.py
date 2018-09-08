@@ -17,10 +17,13 @@ TAGS_PAD_ID = 0
 OUTPUT_DIR = 'runs'
 
 # default filenames
+CONFIG = 'config.json'
 DATASET = 'dataset.torch'
-OPTIMIZER = 'optim.torch'
 MODEL = 'model.torch'
+OPTIMIZER = 'optim.torch'
 TRAINER = 'trainer.torch'
+VOCAB = 'vocab.torch'
+PREDICTIONS = 'predictions.txt'
 
 
 def set_tags_pad_id(pad_id):

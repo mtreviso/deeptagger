@@ -30,25 +30,27 @@ class SimpleLSTM(Model):
         self.sigmoid = None
 
     def build(self, options):
-        word_embeddings_size = options.word_embeddings_size
         # prefix_embeddings_size = options.prefix_embeddings_size
         # suffix_embeddings_size = options.suffix_embeddings_size
         # caps_embeddings_size = options.caps_embeddings_size
         hidden_size = options.hidden_size[0]
+        vocab_size = len(self.words_field.vocab)
         loss_weights = None
         if options.loss_weights == 'balanced':
             # TODO
             # loss_weights = calc_balanced(loss_weights, tags_field)
             loss_weights = torch.FloatTensor(loss_weights)
 
-        if self.word_embeddings is not None:
-            word_embeddings_size = self.word_embeddings.size(1)
+        word_embeddings = None
+        if self.words_field.vocab.vectors is not None:
+            word_embeddings = self.words_field.vocab.vectors
+            options.word_embeddings_size = word_embeddings.size(1)
 
         self.word_emb = nn.Embedding(
-            num_embeddings=self.word_embeddings.size(0),
-            embedding_dim=word_embeddings_size,
+            num_embeddings=vocab_size,
+            embedding_dim=options.word_embeddings_size,
             padding_idx=self.words_padding_idx,
-            _weight=self.word_embeddings,
+            _weight=word_embeddings,
         )
 
         if options.freeze_embeddings:
@@ -57,7 +59,7 @@ class SimpleLSTM(Model):
 
         self.is_bidir = options.bidirectional
         self.sum_bidir = options.sum_bidir
-        self.gru = nn.LSTM(word_embeddings_size,
+        self.gru = nn.LSTM(options.word_embeddings_size,
                            hidden_size,
                            bidirectional=options.bidirectional,
                            batch_first=True)

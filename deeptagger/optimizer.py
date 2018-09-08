@@ -1,25 +1,25 @@
-import torch.optim
+from pathlib import Path
+
+import torch
+
+from deeptagger import constants
+from deeptagger import opts
+
+available_optimizers = {
+    'adam': torch.optim.Adam,
+    'adadelta': torch.optim.Adadelta,
+    'adagrad': torch.optim.Adagrad,
+    'adamax': torch.optim.Adamax,
+    'sparseadam': torch.optim.SparseAdam,
+    'sgd': torch.optim.SGD,
+    'asgd': torch.optim.ASGD,
+    'rmsprop': torch.optim.RMSprop
+}
 
 
-def build_optimizer(options, model_parameters):
+def build(options, model_parameters):
     kwargs = {}
-    OptimizerClass = None
-    if options.optimizer == 'adam':
-        OptimizerClass = torch.optim.Adam
-    elif options.optimizer == 'adadelta':
-        OptimizerClass = torch.optim.Adadelta
-    elif options.optimizer == 'adagrad':
-        OptimizerClass = torch.optim.Adagrad
-    elif options.optimizer == 'adamax':
-        OptimizerClass = torch.optim.Adamax
-    elif options.optimizer == 'sparseadam':
-        OptimizerClass = torch.optim.SparseAdam
-    elif options.optimizer == 'sgd':
-        OptimizerClass = torch.optim.SGD
-    elif options.optimizer == 'asgd':
-        OptimizerClass = torch.optim.ASGD
-    elif options.optimizer == 'rmsprop':
-        OptimizerClass = torch.optim.RMSprop
+    optim_class = available_optimizers[options.optimizer]
 
     if options.learning_rate is not None:
         kwargs['lr'] = options.learning_rate
@@ -43,4 +43,21 @@ def build_optimizer(options, model_parameters):
         kwargs['lr'] = 0.1
 
     parameters = filter(lambda p: p.requires_grad, model_parameters)
-    return OptimizerClass(parameters, **kwargs)
+    return optim_class(parameters, **kwargs)
+
+
+def load_state(path, optim):
+    optim_path = Path(path, constants.OPTIMIZER)
+    optim.load_state_dict(torch.load(str(optim_path)))
+
+
+def load(path, model_parameters):
+    options = opts.load(path)
+    optim = build(options, model_parameters)
+    load_state(path, optim)
+    return optim
+
+
+def save(path, optim):
+    optim_path = Path(path, constants.OPTIMIZER)
+    torch.save(optim.state_dict(), str(optim_path))

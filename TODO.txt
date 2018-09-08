@@ -1,8 +1,3 @@
-Criar método predict:
-	Faz load de um modelo 
-	Chama o predict
-	Faz avaliação
-
 Adicionar features de sufixo, prefixo e capitalizacao
 
 Scripts para plotar loss/acc em relacao as epocas
@@ -15,6 +10,8 @@ Criar modelos mais complexos:
 	+ Attention
 
 Adicionar word embeddings do ELMO
+
+Adicionar viterbi decoder
 
 Adicionar regularização:
 	Dropout depois de quais camadas?

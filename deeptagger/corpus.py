@@ -23,6 +23,11 @@ class Corpus:
         # the number of examples in the corpus
         self.nb_examples = 0
 
+    def add(self, text):
+        text = self._normalize(text)
+        self.fields_examples = [[text]]
+        self.nb_examples += 1
+
     def read(self, filepath):
         """
         filepath: path to a file with the following format:

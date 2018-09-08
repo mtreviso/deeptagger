@@ -22,10 +22,9 @@ if __name__ == '__main__':
     cli.configure_logger(options)
     cli.configure_seed(options)
 
-    logging.info('Running with options:\n{}'.format(pformat(vars(options))))
-    logging.info('Local output directory is: {}'.format(options.output_dir))
-
     if options.task == 'train':
+        logging.info('Running options:\n{}'.format(pformat(vars(options))))
+        logging.info('Output directory is: {}'.format(options.output_dir))
         train.run(options)
     elif options.task == 'predict':
         predict.run(options)

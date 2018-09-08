@@ -1,4 +1,23 @@
+import json
+from argparse import Namespace
+from pathlib import Path
+
+from deeptagger import constants
 from deeptagger.models import available_models
+from deeptagger.optimizer import available_optimizers
+
+
+def load(path):
+    config_path = Path(path, constants.CONFIG)
+    options = json.load(open(str(config_path), 'r'))
+    return Namespace(**options)
+
+
+def save(path, options):
+    config_path = Path(path)
+    config_path.mkdir(exist_ok=True)
+    config_path = Path(config_path, constants.CONFIG)
+    json.dump(vars(options), open(str(config_path), 'w'), indent=4)
 
 
 def general_opts(parser):
@@ -31,14 +50,19 @@ def general_opts(parser):
 
     # Save and load
     group = parser.add_argument_group('save-load')
-    group.add_argument('--save-model',
+    group.add_argument('--save',
                        type=str,
                        default='',
                        help='Output dir for saving the model')
-    group.add_argument('--load-model',
+    group.add_argument('--load',
                        type=str,
                        default='',
-                       help='Input File for loading the model')
+                       help='Input dir for loading the model')
+    group.add_argument('--resume-epoch',
+                       type=int,
+                       default=None,
+                       help='Resume training from a specific epoch saved in a '
+                            'previous execution `runs/output-dir`')
 
 
 def preprocess_opts(parser):
@@ -76,10 +100,6 @@ def preprocess_opts(parser):
 
     # Dictionary options
     group = parser.add_argument_group('data-vocabulary')
-    group.add_argument('--vocab-path',
-                       type=str,
-                       help='Path to an existing vocabulary. '
-                            'Format: one word per line.')
     group.add_argument('--vocab-size',
                        type=int,
                        default=None,
@@ -262,8 +282,7 @@ def train_opts(parser):
     group = parser.add_argument_group('training-optimization')
     group.add_argument('--optimizer',
                        default='sgd',
-                       choices=['sgd', 'adagrad', 'adadelta', 'adam',
-                                'sparseadam', 'rmsprop', 'adamax', 'asgd'],
+                       choices=list(available_optimizers.keys()),
                        help='Optimization method.')
     group.add_argument('--learning-rate',
                        type=float,
@@ -328,3 +347,8 @@ def predict_opts(parser):
                        help='A text to be predicted. '
                             'The text will be splited into sentences '
                             'ending with .?!')
+    group.add_argument('--prediction-type',
+                       type=str,
+                       default='classes',
+                       choices=['classes', 'probas'],
+                       help='Whether to predict classes or probabilities.')

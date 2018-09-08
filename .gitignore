@@ -44,3 +44,6 @@ runs/
 .DS_Store
 
 .pytest_cache/
+
+saved-models/
+predictions/

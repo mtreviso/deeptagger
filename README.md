@@ -55,11 +55,10 @@ have to be the Python 3 version.
 ```python
 import deeptagger
 model = deeptagger.load('path/to/saved-model-dir/')
-tags, probs = model.predict('The quick brown fox jumps over the lazy dog.')
+tags = model.predict('Há livros escritos para evitar espaços vazios na estante .')
 ```
 
-Where `tags` is a list of strings and `probs` is a list of 
-floats. 
+Where `tags` is a list of strings and `labels` is a list of  strings. 
 
 #### Training a PoS tagger model
 ```python
@@ -74,14 +73,15 @@ model = deeptagger.train(args)
 model.save('path/to/model-dir/')
 ```
 
-You can view all arguments and their meaning by calling `deeptagger.help()`
+You can view all arguments and their meaning by calling `deeptagger.help()` or 
+below.
 
 
 #### Invoking in standalone mode (no install required)
 
 For predicting tags:
 ```
-python -m deeptagger predict --load path/to/saved-model-dir/ --text "The quick brown fox jumps over the lazy dog."
+python -m deeptagger predict --load path/to/saved-model-dir/ --text "Há livros escritos para evitar espaços vazios na estante ."
 ```
 
 For training a model:

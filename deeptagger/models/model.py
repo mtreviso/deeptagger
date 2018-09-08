@@ -17,7 +17,6 @@ class Model(torch.nn.Module):
         # Default fields and embeddings
         self.words_field = words_field
         self.tags_field = tags_field
-        self.word_embeddings = words_field.vocab.vectors
         # Extra features
         self.prefixes_field = prefixes_field
         self.suffixes_field = suffixes_field
@@ -39,17 +38,14 @@ class Model(torch.nn.Module):
     def loss_ignore_index(self):
         return self.tags_field.vocab.stoi[self.tags_field.pad_token]
 
-    def loss(self, pred, target):
+    def loss(self, pred, gold):
         # (bs*ts, nb_classes)
         predicted = pred.reshape(-1, self.nb_classes)
 
-        # Ensure y is a tensor
-        y = torch.tensor(target)
-
         # (bs*ts, )
-        y = y.reshape(-1)
+        gold = gold.reshape(-1)
 
-        return self._loss(predicted, y)
+        return self._loss(predicted, gold)
 
     @abstractmethod
     def build(self, **params):
@@ -63,11 +59,9 @@ class Model(torch.nn.Module):
         pred = self.forward(batch)
         return torch.exp(pred)  # assume log softmax in the output
 
-    def extract_features(self, dataset):
-        """
-        :param dataset: torchtext.Dataset object
-        """
-        raise NotImplementedError
+    def predict_classes(self, batch):
+        _, classes = torch.max(self.predict_proba(batch), -1)
+        return classes
 
     def load(self, path):
         logging.debug("Loading model weights from {}".format(path))

@@ -1,7 +1,25 @@
-from torchtext import data
+from torchtext.data import Dataset
+
+from deeptagger.corpus import Corpus
 
 
-class PoSDataset(data.Dataset):
+def build(path, fields_tuples, options):
+    def filter_len(x):
+        return options.min_length <= len(x.words) <= options.max_length
+    corpus = Corpus(fields_tuples, options.del_word, options.del_tag)
+    corpus.read(path)
+    return PoSDataset(corpus, filter_pred=filter_len)
+
+
+def build_text(text, fields_tuples, options):
+    def filter_len(x):
+        return options.min_length <= len(x.words) <= options.max_length
+    corpus = Corpus(fields_tuples, options.del_word)
+    corpus.add(text)
+    return PoSDataset(corpus, filter_pred=filter_len)
+
+
+class PoSDataset(Dataset):
     """Defines a dataset for PoS Tagging."""
 
     @staticmethod
