@@ -55,10 +55,11 @@ have to be the Python 3 version.
 ```python
 import deeptagger
 model = deeptagger.load('path/to/saved-model-dir/')
-tags = model.predict('Há livros escritos para evitar espaços vazios na estante .')
+tags = model.predict_classes('Há livros escritos para evitar espaços vazios na estante .')
 ```
 
-Where `tags` is a list of strings and `labels` is a list of  strings. 
+Where `tags` is a list of strings. Alternatively, you can predict 
+probabilities for each class with `model.predict_probas()`.
 
 #### Training a PoS tagger model
 ```python
