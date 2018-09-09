@@ -72,6 +72,7 @@ class Tagger:
             options = vars(self.options)
         else:
             options = opts.get_default_args()
+            options.gpu_id = self.gpu_id
         options.update(args)
         options = Namespace(**options)
         options.output_dir = cli.configure_output(options.output_dir)

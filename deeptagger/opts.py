@@ -180,7 +180,7 @@ def model_opts(parser):
                        default='same',
                        choices=['same', 'balanced'],
                        help='Weights for penalize each class '
-                            'in loss calculation. `same` will give each class'
+                            'in loss calculation. `same` will give each class '
                             'the same weights. `balanced` will give more '
                             'weight for minority classes.')
     group.add_argument('--hidden-size',
@@ -190,7 +190,7 @@ def model_opts(parser):
                        help='Number of neurons on the hidden layers. '
                             'If you pass more sizes, then more then one '
                             'hidden layer will be created. Please, take a '
-                            'look to the your selected model documentation '
+                            'look to your selected model documentation '
                             'before setting this option.')
 
     group = parser.add_argument_group('extra-features')

@@ -29,4 +29,6 @@ __email__ = 'marcostreviso@usp.br'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2018 Marcos Treviso'
 
+from .predicter import Predicter  # NOQA
 from .tagger import Tagger  # NOQA
+from .trainer import Trainer  # NOQA
