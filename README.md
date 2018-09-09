@@ -110,86 +110,336 @@ python3 -m deeptagger {predict,train} :args:
 ```
 
 #### Arguments quick reference table
-|Option                      |Default      |Description                                                                                                                                                                                              |
-|----------------------------|-------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-|`-h` `--help`               |`-`          |Show this help message and exit                                                                                                                                                                          |
-|`-o` `--output-dir`         |`None`       |Output files for this run under this dir. If not specified, it will create a timestamp dir inside `runs` dir.                                                                                            |
-|`--seed`                    |`42`         |Random seed                                                                                                                                                                                              |
-|`--gpu-id`                  |`None`       |Use CUDA on the listed devices                                                                                                                                                                           |
-|`--debug`                   |`-`          |Debug mode.                                                                                                                                                                                              |
-|`--save`                    |`None`       |Output dir for saving the model                                                                                                                                                                          |
-|`--load`                    |`None`       |Input dir for loading the model                                                                                                                                                                          |
-|`--resume-epoch`            |`None`       |Resume training from a specific epoch saved in a previous execution `runs/output-dir`                                                                                                                    |
-|`--train-path`              |`None`       |Path to training file                                                                                                                                                                                    |
-|`--dev-path`                |`None`       |Path to validation file                                                                                                                                                                                  |
-|`--test-path`               |`None`       |Path to validation file                                                                                                                                                                                  |
-|`--del-word`                |` `          |Delimiter token to split sentence tokens                                                                                                                                                                 |
-|`--del-tag`                 |`_`          |Delimiter token to split word tokens from  tag tokens                                                                                                                                                    |
-|`--max-length`              |`inf`        |Maximum sequence length                                                                                                                                                                                  |
-|`--min-length`              |`0`          |Minimum sequence length.                                                                                                                                                                                 |
-|`--vocab-size`              |`None`       |Max size of the vocabulary.                                                                                                                                                                              |
-|`--vocab-min-frequency`     |`1`          |Min word frequency for vocabulary.                                                                                                                                                                       |
-|`--keep-rare-with-embedding`|`-`          |Keep words that occur less then min-frequency but are in embeddings vocabulary.                                                                                                                          |
-|`--add-embeddings-vocab`    |`-`          |Add words from embeddings vocabulary to source/target vocabulary.                                                                                                                                        |
-|`--embeddings-format`       |`None`       |Word embeddings format. See README for specific formatting instructions.                                                                                                                                 |
-|`--embeddings-path`         |`None`       |Path to word embeddings file for source.                                                                                                                                                                 |
-|`--model`                   |`simple_lstm`|Model architecture. Choices: `{simple_lstm, rcnn}`                                                                                                                                                       |
-|`--word-embeddings-size`    |`100`        |Size of word embeddings.                                                                                                                                                                                 |
-|`--conv-size`               |`100`        |Size of convolution 1D. a.k.a. number of channels.                                                                                                                                                       |
-|`--kernel-size`             |`7`          |Size of the convolving kernel.                                                                                                                                                                           |
-|`--pool-length`             |`3`          |Size of pooling window.                                                                                                                                                                                  |
-|`--dropout`                 |`0.5`        |Dropout rate applied after RNN layers.                                                                                                                                                                   |
-|`--emb-dropout`             |`0.4`        |Dropout rate applied after embedding layers.                                                                                                                                                             |
-|`--bidirectional`           |`-`          |Set RNNs to be bidirectional.                                                                                                                                                                            |
-|`--sum-bidir`               |`-`          |Sum outputs of bidirectional states. By default they are concatenated.                                                                                                                                   |
-|`--freeze-embeddings`       |`-`          |Freeze embedding weights during training.                                                                                                                                                                |
-|`--loss-weights`            |`same`       |Weights for penalize each class in loss calculation. `same` will give each class the same weights. `balanced` will give more weight for minority classes.                                                |
-|`--hidden-size`             |`[100]`      |Number of neurons on the hidden layers. If you pass more sizes, then more then one hidden layer will be created. Please, take a look to your selected model documentation before setting this option.    |
-|`--use-prefixes`            |`-`          |Use prefixes as feature.                                                                                                                                                                                 |
-|`--prefix-embeddings-size`  |`100`        |Size of prefix embeddings.                                                                                                                                                                               |
-|`--prefix-min-length`       |`1`          |Min length of prefixes.                                                                                                                                                                                  |
-|`--prefix-max-length`       |`5`          |Max length of prefixes.                                                                                                                                                                                  |
-|`--use-suffixes`            |`-`          |Use suffixes as feature.                                                                                                                                                                                 |
-|`--suffix-embeddings-size`  |`100`        |Size of suffix embeddings.                                                                                                                                                                               |
-|`--suffix-min-length`       |`1`          |Min length of suffixes.                                                                                                                                                                                  |
-|`--suffix-max-length`       |`5`          |Max length of suffixes.                                                                                                                                                                                  |
-|`--use-caps`                |`-`          |Use capitalization as feature.                                                                                                                                                                           |
-|`--caps-embeddings-size`    |`100`        |Size of capitalization embeddings.                                                                                                                                                                       |
-|`--epochs`                  |`10`         |Number of epochs for training.                                                                                                                                                                           |
-|`--shuffle`                 |`-`          |Shuffle train data before each epoch.                                                                                                                                                                    |
-|`--train-batch-size`        |`64`         |Maximum batch size for training.                                                                                                                                                                         |
-|`--dev-batch-size`          |`64`         |Maximum batch size for evaluating.                                                                                                                                                                       |
-|`--dev-checkpoint-epochs`   |`1`          |Perform an evaluation on dev set after X epochs.                                                                                                                                                         |
-|`--save-checkpoint-epochs`  |`1`          |Save a checkpoint every X epochs.                                                                                                                                                                        |
-|`--save-best-only`          |`-`          |Save only when validation loss is improved.                                                                                                                                                              |
-|`--early-stopping-patience` |`0`          |Stop training if validation loss is not improved after passing X epochs. By defaultthe early stopping procedure is not applied.                                                                          |
-|`--restore-best-model`      |`-`          |Whether to restore the model state from the epoch with the best validation loss found. If False, the model state obtained at the last step of training is used.                                          |
-|`--final-report`            |`-`          |Whether to report a table with the stats history for train/dev/test set after training.                                                                                                                  |
-|`--optimizer`               |`sgd`        |Optimization method. Choices: `{adam, adadelta, adagrad, adamax, sparseadam, sgd, asgd, rmsprop}`                                                                                                        |
-|`--learning-rate`           |`None`       |Starting learning rate. Let unseted to use default values.                                                                                                                                               |
-|`--weight-decay`            |`None`       |L2 penalty. Used for all algorithms. Let unseted to use default values.                                                                                                                                  |
-|`--lr-decay`                |`None`       |Learning reate decay. Used only for: adagrad. Let unseted to use default values.                                                                                                                         |
-|`--rho`                     |`None`       |Coefficient used for computing a running average of squared. Used only for: adadelta. Let unseted to use default values.                                                                                 |
-|`--beta0`                   |`None`       |Coefficient used for computing a running averages of gradient and its squared. Used only for: adam, sparseadam, adamax. Let unseted to use default values.                                               |
-|`--beta1`                   |`None`       |Coefficient used for computing a running averages of gradient and its squared. Used only for: adam, sparseadam, adamax. Let unseted to use default values.                                               |
-|`--momentum`                |`None`       |Momentum factor. Used only for: sgd and rmsprop. Let unseted to use default values.                                                                                                                      |
-|`--nesterov`                |`None`       |Enables Nesterov momentum. Used only for: sgd. Let unseted to use default values.                                                                                                                        |
-|`--alpha`                   |`None`       |Smoothing constant. Used only for: rmsprop. Let unseted to use default values.                                                                                                                           |
+<table class="rich-diff-level-one"> <thead> <tr>
+<th width="28%">Option</th>
+<th width="14%">Default</th>
+<th>Description</th>
+</tr> </thead> <tbody>
+<tr>
+<td>
+<code>-h</code> <code>--help</code>
+</td>
+<td><code>-</code></td>
+<td>Show this help message and exit</td>
+</tr>
+<tr>
+<td>
+<code>-o</code> <code>--output-dir</code>
+</td>
+<td><code>None</code></td>
+<td>Output files for this run under this dir. If not specified, it will create a timestamp dir inside <code>runs</code> dir.</td>
+</tr>
+<tr>
+<td><code>--seed</code></td>
+<td><code>42</code></td>
+<td>Random seed</td>
+</tr>
+<tr>
+<td><code>--gpu-id</code></td>
+<td><code>None</code></td>
+<td>Use CUDA on the listed devices</td>
+</tr>
+<tr>
+<td><code>--debug</code></td>
+<td><code>-</code></td>
+<td>Debug mode.</td>
+</tr>
+<tr>
+<td><code>--save</code></td>
+<td><code>None</code></td>
+<td>Output dir for saving the model</td>
+</tr>
+<tr>
+<td><code>--load</code></td>
+<td><code>None</code></td>
+<td>Input dir for loading the model</td>
+</tr>
+<tr>
+<td><code>--resume-epoch</code></td>
+<td><code>None</code></td>
+<td>Resume training from a specific epoch saved in a previous execution <code>runs/output-dir</code>
+</td>
+</tr>
+<tr>
+<td><code>--train-path</code></td>
+<td><code>None</code></td>
+<td>Path to training file</td>
+</tr>
+<tr>
+<td><code>--dev-path</code></td>
+<td><code>None</code></td>
+<td>Path to validation file</td>
+</tr>
+<tr>
+<td><code>--test-path</code></td>
+<td><code>None</code></td>
+<td>Path to validation file</td>
+</tr>
+<tr>
+<td><code>--del-word</code></td>
+<td><code></code></td>
+<td>Delimiter token to split sentence tokens</td>
+</tr>
+<tr>
+<td><code>--del-tag</code></td>
+<td><code>_</code></td>
+<td>Delimiter token to split word tokens from tag tokens</td>
+</tr>
+<tr>
+<td><code>--max-length</code></td>
+<td><code>inf</code></td>
+<td>Maximum sequence length</td>
+</tr>
+<tr>
+<td><code>--min-length</code></td>
+<td><code>0</code></td>
+<td>Minimum sequence length.</td>
+</tr>
+<tr>
+<td><code>--vocab-size</code></td>
+<td><code>None</code></td>
+<td>Max size of the vocabulary.</td>
+</tr>
+<tr>
+<td><code>--vocab-min-frequency</code></td>
+<td><code>1</code></td>
+<td>Min word frequency for vocabulary.</td>
+</tr>
+<tr>
+<td><code>--keep-rare-with-embedding</code></td>
+<td><code>-</code></td>
+<td>Keep words that occur less then min-frequency but are in embeddings vocabulary.</td>
+</tr>
+<tr>
+<td><code>--add-embeddings-vocab</code></td>
+<td><code>-</code></td>
+<td>Add words from embeddings vocabulary to source/target vocabulary.</td>
+</tr>
+<tr>
+<td><code>--embeddings-format</code></td>
+<td><code>None</code></td>
+<td>Word embeddings format. See README for specific formatting instructions.</td>
+</tr>
+<tr>
+<td><code>--embeddings-path</code></td>
+<td><code>None</code></td>
+<td>Path to word embeddings file for source.</td>
+</tr>
+<tr>
+<td><code>--model</code></td>
+<td><code>simple_lstm</code></td>
+<td>Model architecture. Choices: <code>{simple_lstm, rcnn}</code>
+</td>
+</tr>
+<tr>
+<td><code>--word-embeddings-size</code></td>
+<td><code>100</code></td>
+<td>Size of word embeddings.</td>
+</tr>
+<tr>
+<td><code>--conv-size</code></td>
+<td><code>100</code></td>
+<td>Size of convolution 1D. a.k.a. number of channels.</td>
+</tr>
+<tr>
+<td><code>--kernel-size</code></td>
+<td><code>7</code></td>
+<td>Size of the convolving kernel.</td>
+</tr>
+<tr>
+<td><code>--pool-length</code></td>
+<td><code>3</code></td>
+<td>Size of pooling window.</td>
+</tr>
+<tr>
+<td><code>--dropout</code></td>
+<td><code>0.5</code></td>
+<td>Dropout rate applied after RNN layers.</td>
+</tr>
+<tr>
+<td><code>--emb-dropout</code></td>
+<td><code>0.4</code></td>
+<td>Dropout rate applied after embedding layers.</td>
+</tr>
+<tr>
+<td><code>--bidirectional</code></td>
+<td><code>-</code></td>
+<td>Set RNNs to be bidirectional.</td>
+</tr>
+<tr>
+<td><code>--sum-bidir</code></td>
+<td><code>-</code></td>
+<td>Sum outputs of bidirectional states. By default they are concatenated.</td>
+</tr>
+<tr>
+<td><code>--freeze-embeddings</code></td>
+<td><code>-</code></td>
+<td>Freeze embedding weights during training.</td>
+</tr>
+<tr>
+<td><code>--loss-weights</code></td>
+<td><code>same</code></td>
+<td>Weights for penalize each class in loss calculation. <code>same</code> will give each class the same weights. <code>balanced</code> will give more weight for minority classes.</td>
+</tr>
+<tr>
+<td><code>--hidden-size</code></td>
+<td><code>[100]</code></td>
+<td>Number of neurons on the hidden layers. If you pass more sizes, then more then one hidden layer will be created. Please, take a look to your selected model documentation before setting this option.</td>
+</tr>
+<tr>
+<td><code>--use-prefixes</code></td>
+<td><code>-</code></td>
+<td>Use prefixes as feature.</td>
+</tr>
+<tr>
+<td><code>--prefix-embeddings-size</code></td>
+<td><code>100</code></td>
+<td>Size of prefix embeddings.</td>
+</tr>
+<tr>
+<td><code>--prefix-min-length</code></td>
+<td><code>1</code></td>
+<td>Min length of prefixes.</td>
+</tr>
+<tr>
+<td><code>--prefix-max-length</code></td>
+<td><code>5</code></td>
+<td>Max length of prefixes.</td>
+</tr>
+<tr>
+<td><code>--use-suffixes</code></td>
+<td><code>-</code></td>
+<td>Use suffixes as feature.</td>
+</tr>
+<tr>
+<td><code>--suffix-embeddings-size</code></td>
+<td><code>100</code></td>
+<td>Size of suffix embeddings.</td>
+</tr>
+<tr>
+<td><code>--suffix-min-length</code></td>
+<td><code>1</code></td>
+<td>Min length of suffixes.</td>
+</tr>
+<tr>
+<td><code>--suffix-max-length</code></td>
+<td><code>5</code></td>
+<td>Max length of suffixes.</td>
+</tr>
+<tr>
+<td><code>--use-caps</code></td>
+<td><code>-</code></td>
+<td>Use capitalization as feature.</td>
+</tr>
+<tr>
+<td><code>--caps-embeddings-size</code></td>
+<td><code>100</code></td>
+<td>Size of capitalization embeddings.</td>
+</tr>
+<tr>
+<td><code>--epochs</code></td>
+<td><code>10</code></td>
+<td>Number of epochs for training.</td>
+</tr>
+<tr>
+<td><code>--shuffle</code></td>
+<td><code>-</code></td>
+<td>Shuffle train data before each epoch.</td>
+</tr>
+<tr>
+<td><code>--train-batch-size</code></td>
+<td><code>64</code></td>
+<td>Maximum batch size for training.</td>
+</tr>
+<tr>
+<td><code>--dev-batch-size</code></td>
+<td><code>64</code></td>
+<td>Maximum batch size for evaluating.</td>
+</tr>
+<tr>
+<td><code>--dev-checkpoint-epochs</code></td>
+<td><code>1</code></td>
+<td>Perform an evaluation on dev set after X epochs.</td>
+</tr>
+<tr>
+<td><code>--save-checkpoint-epochs</code></td>
+<td><code>1</code></td>
+<td>Save a checkpoint every X epochs.</td>
+</tr>
+<tr>
+<td><code>--save-best-only</code></td>
+<td><code>-</code></td>
+<td>Save only when validation loss is improved.</td>
+</tr>
+<tr>
+<td><code>--early-stopping-patience</code></td>
+<td><code>0</code></td>
+<td>Stop training if validation loss is not improved after passing X epochs. By defaultthe early stopping procedure is not applied.</td>
+</tr>
+<tr>
+<td><code>--restore-best-model</code></td>
+<td><code>-</code></td>
+<td>Whether to restore the model state from the epoch with the best validation loss found. If False, the model state obtained at the last step of training is used.</td>
+</tr>
+<tr>
+<td><code>--final-report</code></td>
+<td><code>-</code></td>
+<td>Whether to report a table with the stats history for train/dev/test set after training.</td>
+</tr>
+<tr>
+<td><code>--optimizer</code></td>
+<td><code>sgd</code></td>
+<td>Optimization method. Choices: <code>{adam, adadelta, adagrad, adamax, sparseadam, sgd, asgd, rmsprop}</code>
+</td>
+</tr>
+<tr>
+<td><code>--learning-rate</code></td>
+<td><code>None</code></td>
+<td>Starting learning rate. Let unseted to use default values.</td>
+</tr>
+<tr>
+<td><code>--weight-decay</code></td>
+<td><code>None</code></td>
+<td>L2 penalty. Used for all algorithms. Let unseted to use default values.</td>
+</tr>
+<tr>
+<td><code>--lr-decay</code></td>
+<td><code>None</code></td>
+<td>Learning reate decay. Used only for: adagrad. Let unseted to use default values.</td>
+</tr>
+<tr>
+<td><code>--rho</code></td>
+<td><code>None</code></td>
+<td>Coefficient used for computing a running average of squared. Used only for: adadelta. Let unseted to use default values.</td>
+</tr>
+<tr>
+<td><code>--beta0</code></td>
+<td><code>None</code></td>
+<td>Coefficient used for computing a running averages of gradient and its squared. Used only for: adam, sparseadam, adamax. Let unseted to use default values.</td>
+</tr>
+<tr>
+<td><code>--beta1</code></td>
+<td><code>None</code></td>
+<td>Coefficient used for computing a running averages of gradient and its squared. Used only for: adam, sparseadam, adamax. Let unseted to use default values.</td>
+</tr>
+<tr>
+<td><code>--momentum</code></td>
+<td><code>None</code></td>
+<td>Momentum factor. Used only for: sgd and rmsprop. Let unseted to use default values.</td>
+</tr>
+<tr>
+<td><code>--nesterov</code></td>
+<td><code>None</code></td>
+<td>Enables Nesterov momentum. Used only for: sgd. Let unseted to use default values.</td>
+</tr>
+<tr>
+<td><code>--alpha</code></td>
+<td><code>None</code></td>
+<td>Smoothing constant. Used only for: rmsprop. Let unseted to use default values.</td>
+</tr>
+</tbody>
+</table>
 
-<style>
-table:nth-of-type(1) {
-    display:table;
-    width:100%;
-}
-
-table:nth-of-type(1) th:nth-of-type(1) {
-    width:28%;
-}
-
-table:nth-of-type(1) th:nth-of-type(2) {
-    width:14%;
-}
-</style>
 
 ## Contributing
 Anyone can help make this project better - read [CONTRIBUTING](CONTRIBUTING.md) to get started!
