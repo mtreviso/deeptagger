@@ -34,11 +34,11 @@ def build_vocabs(fields_tuples, train_dataset, all_datasets, options):
                             add_vectors_vocab=options.add_embeddings_vocab)
     tags_field.build_vocab(*all_datasets)
     if 'prefixes' in dict_fields:
-        pass
+        dict_fields['prefixes'].build_vocab(train_dataset)
     if 'suffixes' in dict_fields:
-        pass
+        dict_fields['suffixes'].build_vocab(train_dataset)
     if 'caps' in dict_fields:
-        pass
+        dict_fields['caps'].build_vocab(train_dataset)
     constants.PAD_ID = dict_fields['words'].vocab.stoi[constants.PAD]
     constants.TAGS_PAD_ID = dict_fields['tags'].vocab.stoi[constants.PAD]
 
@@ -100,10 +100,27 @@ class TagsField(Field):
 
     def __init__(self,
                  unk_token=None,
-                 batch_first=True,
                  pad_token=constants.PAD,
+                 batch_first=True,
                  **kwargs):
         super().__init__(**kwargs)
         self.unk_token = unk_token
         self.pad_token = pad_token
         self.batch_first = batch_first
+
+
+class AffixesField(Field):
+    """Defines a field for affixes (prefixes and suffixes) by setting only
+    unk_token and pad_token to their default constant value."""
+    def __init__(self,
+                 unk_token=constants.UNK,
+                 pad_token=constants.PAD,
+                 batch_first=True,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.unk_token = unk_token
+        self.pad_token = pad_token
+        self.batch_first = batch_first
+
+
+CapsField = AffixesField

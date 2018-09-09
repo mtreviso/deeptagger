@@ -1,18 +1,30 @@
 import logging
+from argparse import Namespace
 from pathlib import Path
 
 from deeptagger import constants
 from deeptagger import dataset
+from deeptagger import features
 from deeptagger import fields
 from deeptagger import iterator
 from deeptagger import models
+from deeptagger import opts
 from deeptagger.predicter import Predicter
 
+
+def load(options):
+
+    loaded_options = vars(loaded_options)
+    options = vars(options)
+    loaded_options.update(options)
+    return Namespace(**loaded_options)
 
 def run(options):
     words_field = fields.WordsField()
     tags_field = fields.TagsField()
     fields_tuples = [('words', words_field), ('tags', tags_field)]
+    fields_tuples += features.load(options.load)
+
 
     if options.test_path is None and options.text is None:
         raise Exception('You should inform a path to test data or a text.')
@@ -23,8 +35,8 @@ def run(options):
     dataset_iter = None
     if options.test_path is not None:
         logging.info('Building test dataset: {}'.format(options.test_path))
-        words_tuple = [('words', words_field)]  # hack since we dont have tags
-        test_dataset = dataset.build(options.test_path, words_tuple, options)
+        test_tuples = list(filter(lambda x: x[0] != 'tags', fields_tuples))
+        test_dataset = dataset.build(options.test_path, test_tuples, options)
 
         logging.info('Building test iterator...')
         dataset_iter = iterator.build(test_dataset, options.gpu_id,
@@ -32,9 +44,11 @@ def run(options):
 
     if options.text is not None:
         logging.info('Preparing text...')
-        words_tuple = [('words', words_field)]  # hack since we dont have tags
-        test_dataset = dataset.build_texts(options.text, words_tuple,
-                                           options)
+        test_tuples = list(filter(lambda x: x[0] != 'tags', fields_tuples))
+        test_dataset = dataset.build_texts(options.text, test_tuples, options)
+
+        for sample in test_dataset:
+            print(sample.prefixes)
 
         logging.info('Building iterator...')
         dataset_iter = iterator.build(test_dataset, options.gpu_id,

@@ -7,10 +7,9 @@ import torch
 from deeptagger import constants
 from deeptagger import models
 from deeptagger import optimizer
-
+from deeptagger.models.utils import indexes_to_words
 from deeptagger.report import report_progress, report_stats, report_stats_final
 from deeptagger.stats import Stats
-from deeptagger.models.utils import indexes_to_words
 
 
 class Trainer:

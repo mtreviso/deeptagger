@@ -1,6 +1,8 @@
-from collections import defaultdict
-from torchtext.vocab import Vocab
 import warnings
+from collections import defaultdict
+
+from torchtext.vocab import Vocab
+
 from deeptagger.constants import UNK_ID, UNK, PAD, START, STOP
 
 

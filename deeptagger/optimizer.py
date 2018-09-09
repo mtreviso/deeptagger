@@ -5,6 +5,7 @@ import torch
 from deeptagger import constants
 from deeptagger import opts
 
+
 available_optimizers = {
     'adam': torch.optim.Adam,
     'adadelta': torch.optim.Adadelta,

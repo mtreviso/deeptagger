@@ -13,6 +13,7 @@ python3 -m deeptagger train \
 					  --output-dir "runs/testing-macmorpho_v1_toy/" \
 					  --train-batch-size 128 \
 					  --dev-batch-size 128 \
+					  --hidden-size 7 \
 					  --optimizer adam \
 					  --save-best-only \
 					  --early-stopping-patience 3 \
@@ -20,6 +21,9 @@ python3 -m deeptagger train \
 					  --final-report \
 					  --add-embeddings-vocab \
 					  --epochs 2 \
-					  --save testing-toy-save
+					  --save "saved-models/testing-toy-save/" \
+					  --use-prefixes \
+					  --use-suffixes \
+					  --use-caps
 
 

@@ -203,11 +203,11 @@ def model_opts(parser):
                        help='Size of prefix embeddings.')
     group.add_argument('--prefix-min-length',
                        type=int,
-                       default=2,
+                       default=1,
                        help='Min length of prefixes.')
     group.add_argument('--prefix-max-length',
                        type=int,
-                       default=2,
+                       default=5,
                        help='Max length of prefixes.')
     group.add_argument('--use-suffixes',
                        action='store_true',
@@ -218,11 +218,11 @@ def model_opts(parser):
                        help='Size of suffix embeddings.')
     group.add_argument('--suffix-min-length',
                        type=int,
-                       default=2,
+                       default=1,
                        help='Min length of suffixes.')
     group.add_argument('--suffix-max-length',
                        type=int,
-                       default=2,
+                       default=5,
                        help='Max length of suffixes.')
     group.add_argument('--use-caps',
                        action='store_true',

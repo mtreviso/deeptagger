@@ -1,6 +1,7 @@
 import torch
-from deeptagger.models.utils import unmask
+
 from deeptagger import constants
+from deeptagger.models.utils import unmask
 
 
 class Predicter:

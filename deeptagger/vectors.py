@@ -1,7 +1,9 @@
 import logging
-import torch
 from functools import partial
+
+import torch
 from torchtext.vocab import Vectors
+
 from deeptagger.constants import UNK, PAD, START, STOP
 
 

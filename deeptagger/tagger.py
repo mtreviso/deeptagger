@@ -1,6 +1,7 @@
-from pathlib import Path
 from argparse import Namespace
+from pathlib import Path
 
+from deeptagger import cli
 from deeptagger import constants
 from deeptagger import dataset
 from deeptagger import fields
@@ -9,7 +10,6 @@ from deeptagger import models
 from deeptagger import optimizer
 from deeptagger import opts
 from deeptagger import train
-from deeptagger import cli
 from deeptagger.predict import transform_classes_to_tags
 from deeptagger.predicter import Predicter
 

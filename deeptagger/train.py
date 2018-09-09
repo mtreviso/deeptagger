@@ -1,6 +1,7 @@
 import logging
 
 from deeptagger import dataset
+from deeptagger import features
 from deeptagger import fields
 from deeptagger import iterator
 from deeptagger import models
@@ -12,8 +13,8 @@ from deeptagger.trainer import Trainer
 def run(options):
     words_field = fields.WordsField()
     tags_field = fields.TagsField()
-    fields_tuples = [('words', words_field),
-                     ('tags', tags_field)]
+    fields_tuples = [('words', words_field), ('tags', tags_field)]
+    fields_tuples += features.build(options)
 
     logging.info('Building train corpus: {}'.format(options.train_path))
     train_dataset = dataset.build(options.train_path, fields_tuples, options)
@@ -59,6 +60,10 @@ def run(options):
         fields.build_vocabs(fields_tuples, train_dataset, datasets, options)
         logging.info('Word vocab size: {}'.format(len(words_field.vocab)))
         logging.info('Tag vocab size: {}'.format(len(tags_field.vocab)))
+        if options.use_prefixes:
+            logging.info('Prefix vocab size: {}'.format(len(fields_tuples[2][1].vocab)))
+        if options.use_suffixes:
+            logging.info('Suffix vocab size: {}'.format(len(fields_tuples[3][1].vocab)))
         logging.info('Building model...')
         model = models.build(options, fields_tuples)
         logging.info('Building optimizer...')
