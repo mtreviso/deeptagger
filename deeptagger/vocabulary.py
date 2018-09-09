@@ -114,9 +114,9 @@ class Vocabulary(Vocab):
 
         self.vectors = None
         self.vectors_words = set()
-        for v in vectors:
-            self.vectors_words.update(v.stoi.keys())
         if vectors is not None:
+            for v in vectors:
+                self.vectors_words.update(v.stoi.keys())
             self.load_vectors(vectors, unk_init=unk_init, cache=vectors_cache)
         else:
             assert unk_init is None and vectors_cache is None

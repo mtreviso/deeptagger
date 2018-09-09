@@ -87,11 +87,6 @@ class RCNN(Model):
 
         self.init_weights()
 
-        # Set model to a specific gpu device
-        if options.gpu_id is not None:
-            torch.cuda.set_device(options.gpu_id)
-            self.cuda()
-
         # Loss
         self._loss = nn.NLLLoss(weight=loss_weights,
                                 ignore_index=self.loss_ignore_index)

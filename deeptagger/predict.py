@@ -33,8 +33,8 @@ def run(options):
     if options.text is not None:
         logging.info('Preparing text...')
         words_tuple = [('words', words_field)]  # hack since we dont have tags
-        test_dataset = dataset.build_text(options.text, words_tuple,
-                                          options)
+        test_dataset = dataset.build_texts(options.text, words_tuple,
+                                           options)
 
         logging.info('Building iterator...')
         dataset_iter = iterator.build(test_dataset, options.gpu_id,

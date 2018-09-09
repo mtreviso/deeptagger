@@ -28,3 +28,5 @@ __email__ = 'marcostreviso@usp.br'
 
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2018 Marcos Treviso'
+
+from .tagger import Tagger  # NOQA

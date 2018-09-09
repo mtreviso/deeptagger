@@ -23,10 +23,12 @@ class Corpus:
         # the number of examples in the corpus
         self.nb_examples = 0
 
-    def add(self, text):
-        text = self._normalize(text)
-        self.fields_examples = [[text]]
-        self.nb_examples += 1
+    def add(self, texts):
+        if not isinstance(texts, (list, tuple)):
+            texts = [texts]
+        texts = list(map(self._normalize, texts))
+        self.fields_examples = [texts]
+        self.nb_examples += len(texts)
 
     def read(self, filepath):
         """

@@ -18,9 +18,10 @@ opts.predict_opts(parser)
 
 if __name__ == '__main__':
     options = parser.parse_args()
-    cli.configure_output(options)
-    cli.configure_logger(options)
-    cli.configure_seed(options)
+    options.outpur_dir = cli.configure_output(options.output_dir)
+    cli.configure_logger(options.debug, options.outpur_dir)
+    cli.configure_seed(options.seed)
+    cli.configure_device(options.gpu_id)
 
     if options.task == 'train':
         logging.info('Running options:\n{}'.format(pformat(vars(options))))

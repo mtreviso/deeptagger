@@ -88,3 +88,5 @@ def run(options):
         models.save(options.save, model)
         logging.info('Saving optimizer...')
         optimizer.save(options.save, optim)
+
+    return options, fields_tuples, model, optim

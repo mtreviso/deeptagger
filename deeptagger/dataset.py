@@ -11,11 +11,11 @@ def build(path, fields_tuples, options):
     return PoSDataset(corpus, filter_pred=filter_len)
 
 
-def build_text(text, fields_tuples, options):
+def build_texts(texts, fields_tuples, options):
     def filter_len(x):
         return options.min_length <= len(x.words) <= options.max_length
     corpus = Corpus(fields_tuples, options.del_word)
-    corpus.add(text)
+    corpus.add(texts)
     return PoSDataset(corpus, filter_pred=filter_len)
 
 

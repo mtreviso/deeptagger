@@ -52,10 +52,13 @@ have to be the Python 3 version.
 
 #### Extracting PoS tags
 
+Using gpu to extract tags:
+
 ```python
 import deeptagger
-model = deeptagger.load('path/to/saved-model-dir/')
-tags = model.predict_classes('Há livros escritos para evitar espaços vazios na estante .')
+tagger = deeptagger.Tagger(gpu_id=1)
+tagger.load('path/to/saved-model-dir/')
+tags = tagger.predict_classes('Há livros escritos para evitar espaços vazios na estante .')
 ```
 
 Where `tags` is a list of strings. Alternatively, you can predict 
@@ -68,14 +71,15 @@ args = {
   'train_path': "path/to/train.txt",
   'dev_path': "path/to/dev.txt",
   'del_word': " ",
-  'del_tag': "_"    
+  'del_tag': "_"
 }
-model = deeptagger.train(args)
+tagger = deeptagger.Tagger()
+model =  tagger.train(args)
 model.save('path/to/model-dir/')
 ```
 
-You can view all arguments and their meaning by calling `deeptagger.help()` or 
-below.
+You can view all arguments and their meaning by calling `deeptagger.help()`. 
+Or take a look at the section [arguments](#arguments).
 
 
 #### Invoking in standalone mode (no install required)

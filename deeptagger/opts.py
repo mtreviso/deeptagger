@@ -3,8 +3,8 @@ from argparse import Namespace
 from pathlib import Path
 
 from deeptagger import constants
-from deeptagger.models import available_models
-from deeptagger.optimizer import available_optimizers
+from deeptagger import models
+from deeptagger import optimizer
 
 
 def load(path):
@@ -52,11 +52,11 @@ def general_opts(parser):
     group = parser.add_argument_group('save-load')
     group.add_argument('--save',
                        type=str,
-                       default='',
+                       default=None,
                        help='Output dir for saving the model')
     group.add_argument('--load',
                        type=str,
-                       default='',
+                       default=None,
                        help='Input dir for loading the model')
     group.add_argument('--resume-epoch',
                        type=int,
@@ -136,7 +136,7 @@ def model_opts(parser):
     group.add_argument('--model',
                        type=str,
                        default='simple_lstm',
-                       choices=list(available_models.keys()),
+                       choices=list(models.available_models.keys()),
                        help='DeepTagger model architecture.')
 
     group = parser.add_argument_group('hyper-parameters')
@@ -282,7 +282,7 @@ def train_opts(parser):
     group = parser.add_argument_group('training-optimization')
     group.add_argument('--optimizer',
                        default='sgd',
-                       choices=list(available_optimizers.keys()),
+                       choices=list(optimizer.available_optimizers.keys()),
                        help='Optimization method.')
     group.add_argument('--learning-rate',
                        type=float,
@@ -352,3 +352,86 @@ def predict_opts(parser):
                        default='classes',
                        choices=['classes', 'probas'],
                        help='Whether to predict classes or probabilities.')
+
+
+def get_default_args():
+    return {
+        'add_embeddings_vocab': False,
+        'alpha': None,
+        'beta0': None,
+        'beta1': None,
+        'bidirectional': False,
+        'caps_embeddings_size': 100,
+        'conv_size': 100,
+        'debug': False,
+        'del_tag': '_',
+        'del_word': ' ',
+        'dev_batch_size': 64,
+        'dev_checkpoint_epochs': 1,
+        'dev_path': None,
+        'dropout': 0.5,
+        'early_stopping_patience': 0,
+        'emb_dropout': 0.4,
+        'embeddings_format': None,
+        'embeddings_path': None,
+        'epochs': 10,
+        'final_report': False,
+        'freeze_embeddings': False,
+        'gpu_id': None,
+        'hidden_size': [100],
+        'keep_rare_with_embedding': False,
+        'kernel_size': 7,
+        'learning_rate': None,
+        'load': None,
+        'loss_weights': 'same',
+        'lr_decay': None,
+        'max_length': float("inf"),
+        'min_length': 0,
+        'model': 'simple_lstm',
+        'momentum': None,
+        'nesterov': None,
+        'optimizer': 'sgd',
+        'output_dir': None,
+        'pool_length': 3,
+        'prediction_type': 'classes',
+        'prefix_embeddings_size': 100,
+        'prefix_max_length': 2,
+        'prefix_min_length': 2,
+        'restore_best_model': False,
+        'resume_epoch': None,
+        'rho': None,
+        'save': None,
+        'save_best_only': False,
+        'save_checkpoint_epochs': 1,
+        'seed': 42,
+        'shuffle': False,
+        'suffix_embeddings_size': 100,
+        'suffix_max_length': 2,
+        'suffix_min_length': 2,
+        'sum_bidir': False,
+        'task': 'predict',
+        'test_path': None,
+        'text': None,
+        'train_batch_size': 64,
+        'train_path': None,
+        'use_caps': False,
+        'use_prefixes': False,
+        'use_suffixes': False,
+        'vocab_min_frequency': 1,
+        'vocab_size': None,
+        'weight_decay': None,
+        'word_embeddings_size': 100
+    }
+
+
+# if __name__ == '__main__':
+#     from pprint import pprint
+#     import argparse
+#     parser = argparse.ArgumentParser(description='DeepTagger')
+#     general_opts(parser)
+#     preprocess_opts(parser)
+#     model_opts(parser)
+#     train_opts(parser)
+#     predict_opts(parser)
+#     options = parser.parse_args()
+#     pprint(vars(options))

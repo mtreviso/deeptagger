@@ -23,6 +23,8 @@ def build(options, fields_tuples):
                         suffixes_field=dict_fields['suffixes'],
                         caps_field=dict_fields['caps'])
     model.build(options)
+    if options.gpu_id is not None:
+        model = model.cuda(options.gpu_id)
     return model
 
 
