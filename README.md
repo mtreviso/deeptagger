@@ -110,9 +110,8 @@ python3 -m deeptagger {predict,train} :args:
 ```
 
 #### Arguments quick reference table
-|Option                      |Default      |Description                                                                                                                                                                                              |
+|Option &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;                     |Default      |Description                                                                                                                                                                                              |
 |----------------------------|-------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-|<img width=200/> |<img width=50/>| |
 |`-h` `--help`               |`-`          |Show this help message and exit                                                                                                                                                                          |
 |`-o` `--output-dir`         |`None`       |Output files for this run under this dir. If not specified, it will create a timestamp dir inside `runs` dir.                                                                                            |
 |`--seed`                    |`42`         |Random seed                                                                                                                                                                                              |
