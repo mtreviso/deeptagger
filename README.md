@@ -119,7 +119,7 @@ python3 -m deeptagger {predict,train} :args:
 <td>
 <code>-h</code> <code>--help</code>
 </td>
-<td><code></code></td>
+<td></td>
 <td>Show this help message and exit</td>
 </tr>
 <tr>
@@ -141,7 +141,7 @@ python3 -m deeptagger {predict,train} :args:
 </tr>
 <tr>
 <td><code>--debug</code></td>
-<td><code></code></td>
+<td></td>
 <td>Debug mode.</td>
 </tr>
 <tr>
@@ -177,7 +177,7 @@ python3 -m deeptagger {predict,train} :args:
 </tr>
 <tr>
 <td><code>--del-word</code></td>
-<td><code></code></td>
+<td></td>
 <td>Delimiter token to split sentence tokens</td>
 </tr>
 <tr>
@@ -207,12 +207,12 @@ python3 -m deeptagger {predict,train} :args:
 </tr>
 <tr>
 <td><code>--keep-rare-with-embedding</code></td>
-<td><code></code></td>
+<td></td>
 <td>Keep words that occur less then min-frequency but are in embeddings vocabulary.</td>
 </tr>
 <tr>
 <td><code>--add-embeddings-vocab</code></td>
-<td><code></code></td>
+<td></td>
 <td>Add words from embeddings vocabulary to source/target vocabulary.</td>
 </tr>
 <tr>
@@ -263,17 +263,17 @@ python3 -m deeptagger {predict,train} :args:
 </tr>
 <tr>
 <td><code>--bidirectional</code></td>
-<td><code></code></td>
+<td></td>
 <td>Set RNNs to be bidirectional.</td>
 </tr>
 <tr>
 <td><code>--sum-bidir</code></td>
-<td><code></code></td>
+<td></td>
 <td>Sum outputs of bidirectional states. By default they are concatenated.</td>
 </tr>
 <tr>
 <td><code>--freeze-embeddings</code></td>
-<td><code></code></td>
+<td></td>
 <td>Freeze embedding weights during training.</td>
 </tr>
 <tr>
@@ -288,7 +288,7 @@ python3 -m deeptagger {predict,train} :args:
 </tr>
 <tr>
 <td><code>--use-prefixes</code></td>
-<td><code></code></td>
+<td></td>
 <td>Use prefixes as feature.</td>
 </tr>
 <tr>
@@ -308,7 +308,7 @@ python3 -m deeptagger {predict,train} :args:
 </tr>
 <tr>
 <td><code>--use-suffixes</code></td>
-<td><code></code></td>
+<td></td>
 <td>Use suffixes as feature.</td>
 </tr>
 <tr>
@@ -328,7 +328,7 @@ python3 -m deeptagger {predict,train} :args:
 </tr>
 <tr>
 <td><code>--use-caps</code></td>
-<td><code></code></td>
+<td></td>
 <td>Use capitalization as feature.</td>
 </tr>
 <tr>
@@ -343,7 +343,7 @@ python3 -m deeptagger {predict,train} :args:
 </tr>
 <tr>
 <td><code>--shuffle</code></td>
-<td><code></code></td>
+<td></td>
 <td>Shuffle train data before each epoch.</td>
 </tr>
 <tr>
@@ -368,7 +368,7 @@ python3 -m deeptagger {predict,train} :args:
 </tr>
 <tr>
 <td><code>--save-best-only</code></td>
-<td><code></code></td>
+<td></td>
 <td>Save only when validation loss is improved.</td>
 </tr>
 <tr>
@@ -378,12 +378,12 @@ python3 -m deeptagger {predict,train} :args:
 </tr>
 <tr>
 <td><code>--restore-best-model</code></td>
-<td><code></code></td>
+<td></td>
 <td>Whether to restore the model state from the epoch with the best validation loss found. If False, the model state obtained at the last step of training is used.</td>
 </tr>
 <tr>
 <td><code>--final-report</code></td>
-<td><code></code></td>
+<td></td>
 <td>Whether to report a table with the stats history for train/dev/test set after training.</td>
 </tr>
 <tr>
