@@ -1,6 +1,5 @@
 from deeptagger import opts
 from deeptagger import fields
-from deeptagger import constants
 
 
 def build(options):
@@ -40,10 +39,11 @@ def extract_suffixes(words, min_length, max_length):
 
 def extract_affixes(words, min_length, max_length, affix_type='prefix'):
     total_length = max_length - min_length + 1
+    pad_token = '<pad-{}>'.format(affix_type)
 
     def fill_with_pad(v):
         for _ in range(total_length - len(v)):
-            v.append(constants.PAD)
+            v.append(pad_token)
 
     new_words = []
     for sentence in words:

@@ -28,8 +28,8 @@ class Corpus:
         self.nb_examples = 0
         # mapping from attr name to their index in the list
         names, _ = zip(*self.attr_fields)
-        self.ai = dict(zip(names, range(len(names))))
-        self.fields_examples = [[] for _ in range(len(self.ai))]
+        self.attr_index = dict(zip(names, range(len(names))))
+        self.fields_examples = [[] for _ in range(len(self.attr_index))]
 
     def add_texts(self, texts):
         """
@@ -40,7 +40,7 @@ class Corpus:
         if not isinstance(texts, (list, tuple)):
             texts = [texts]
         texts = list(map(self._normalize, texts))
-        self.fields_examples[self.ai['words']] = texts
+        self.fields_examples[self.attr_index['words']] = texts
         self.nb_examples += len(texts)
 
     def add_features(self,
@@ -63,19 +63,19 @@ class Corpus:
         """
         new_examples = [[] for _ in range(len(features_fields_tuples))]
         self.fields_examples.extend(new_examples)
-        words = self.fields_examples[self.ai['words']]
-        if 'prefixes' in self.ai:
+        words = self.fields_examples[self.attr_index['words']]
+        if 'prefixes' in self.attr_index:
             prefixes = extract_prefixes(words,
                                         prefix_min_length,
                                         prefix_max_length)
-            self.fields_examples[self.ai['prefixes']] = prefixes
-        if 'suffixes' in self.ai:
+            self.fields_examples[self.attr_index['prefixes']] = prefixes
+        if 'suffixes' in self.attr_index:
             suffixes = extract_suffixes(words,
                                         suffix_min_length,
                                         suffix_max_length)
-            self.fields_examples[self.ai['suffixes']] = suffixes
-        if 'caps' in self.ai:
-            self.fields_examples[self.ai['caps']] = extract_caps(words)
+            self.fields_examples[self.attr_index['suffixes']] = suffixes
+        if 'caps' in self.attr_index:
+            self.fields_examples[self.attr_index['caps']] = extract_caps(words)
 
     def read(self, filepath):
         """
@@ -110,8 +110,8 @@ class Corpus:
                 words_for_example.append(self._normalize(' '.join(words)))
                 tags_for_example.append(' '.join(tags))
         # add words and tags examples
-        self.fields_examples[self.ai['words']] = words_for_example
-        self.fields_examples[self.ai['tags']] = tags_for_example
+        self.fields_examples[self.attr_index['words']] = words_for_example
+        self.fields_examples[self.attr_index['tags']] = tags_for_example
         # then add each corresponding sentence from each field
         nb_lines = [len(fe) for fe in self.fields_examples if fe]
         # assert files have the same size

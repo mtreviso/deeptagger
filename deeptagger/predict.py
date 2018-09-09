@@ -1,5 +1,4 @@
 import logging
-from argparse import Namespace
 from pathlib import Path
 
 from deeptagger import constants
@@ -8,23 +7,14 @@ from deeptagger import features
 from deeptagger import fields
 from deeptagger import iterator
 from deeptagger import models
-from deeptagger import opts
 from deeptagger.predicter import Predicter
 
-
-def load(options):
-
-    loaded_options = vars(loaded_options)
-    options = vars(options)
-    loaded_options.update(options)
-    return Namespace(**loaded_options)
 
 def run(options):
     words_field = fields.WordsField()
     tags_field = fields.TagsField()
     fields_tuples = [('words', words_field), ('tags', tags_field)]
     fields_tuples += features.load(options.load)
-
 
     if options.test_path is None and options.text is None:
         raise Exception('You should inform a path to test data or a text.')

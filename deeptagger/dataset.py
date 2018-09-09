@@ -8,7 +8,6 @@ def build(path, fields_tuples, options):
         return options.min_length <= len(x.words) <= options.max_length
     corpus = Corpus(fields_tuples, options.del_word, options.del_tag)
     corpus.read(path)
-
     feature_fields = list(filter(lambda x: x[0] not in ['words', 'tags'],
                                  fields_tuples))
     if feature_fields:

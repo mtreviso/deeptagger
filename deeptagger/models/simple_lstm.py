@@ -49,7 +49,7 @@ class SimpleLSTM(Model):
         self.word_emb = nn.Embedding(
             num_embeddings=vocab_size,
             embedding_dim=options.word_embeddings_size,
-            padding_idx=self.words_padding_idx,
+            padding_idx=constants.PAD_ID,
             _weight=word_embeddings,
         )
 
@@ -78,7 +78,7 @@ class SimpleLSTM(Model):
 
         # Loss
         self._loss = nn.NLLLoss(weight=loss_weights,
-                                ignore_index=self.loss_ignore_index)
+                                ignore_index=constants.TAGS_PAD_ID)
 
         self.is_built = True
 

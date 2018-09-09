@@ -40,7 +40,10 @@ def build_vocabs(fields_tuples, train_dataset, all_datasets, options):
     if 'caps' in dict_fields:
         dict_fields['caps'].build_vocab(train_dataset)
     constants.PAD_ID = dict_fields['words'].vocab.stoi[constants.PAD]
+    for attr in ['words', 'prefixes', 'suffixes', 'caps']:
+        assert(constants.PAD_ID == dict_fields[attr].vocab.stoi[constants.PAD])
     constants.TAGS_PAD_ID = dict_fields['tags'].vocab.stoi[constants.PAD]
+    constants.NB_LABELS = len(dict_fields['tags'].vocab)
 
 
 def load_vocabs(path, fields_tuples):
@@ -52,8 +55,10 @@ def load_vocabs(path, fields_tuples):
         field.vocab = vocabs[name]
     dict_fields = dict(fields_tuples)
     constants.PAD_ID = dict_fields['words'].vocab.stoi[constants.PAD]
-    if 'tags' in dict_fields:
-        constants.TAGS_PAD_ID = dict_fields['tags'].vocab.stoi[constants.PAD]
+    for attr in ['words', 'prefixes', 'suffixes', 'caps']:
+        assert(constants.PAD_ID == dict_fields[attr].vocab.stoi[constants.PAD])
+    constants.TAGS_PAD_ID = dict_fields['tags'].vocab.stoi[constants.PAD]
+    constants.NB_LABELS = len(dict_fields['tags'].vocab)
 
 
 def save_vocabs(path, fields_tuples):

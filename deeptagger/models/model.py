@@ -30,14 +30,6 @@ class Model(torch.nn.Module):
     def nb_classes(self):
         return len(self.tags_field.vocab.stoi)
 
-    @property
-    def words_padding_idx(self):
-        return self.words_field.vocab.stoi[self.words_field.pad_token]
-
-    @property
-    def loss_ignore_index(self):
-        return self.tags_field.vocab.stoi[self.tags_field.pad_token]
-
     def loss(self, pred, gold):
         # (bs*ts, nb_classes)
         predicted = pred.reshape(-1, self.nb_classes)

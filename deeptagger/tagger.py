@@ -4,6 +4,7 @@ from pathlib import Path
 from deeptagger import cli
 from deeptagger import constants
 from deeptagger import dataset
+from deeptagger import features
 from deeptagger import fields
 from deeptagger import iterator
 from deeptagger import models
@@ -16,7 +17,7 @@ from deeptagger.predicter import Predicter
 
 class Tagger:
 
-    def __init__(self, batch_size=32, gpu_id=None):
+    def __init__(self, gpu_id=None):
         self.words_field = fields.WordsField()
         self.tags_field = fields.TagsField()
         self.fields_tuples = [('words', self.words_field),
@@ -25,24 +26,24 @@ class Tagger:
         self.model = None
         self.optim = None
         self.gpu_id = gpu_id
-        self.batch_size = batch_size
-        self.loaded = False
+        self._loaded = False
 
     def load(self, dir_path):
-        fields.load_vocabs(dir_path, self.fields_tuples)
         self.options = opts.load(dir_path)
+        self.fields_tuples += features.load(dir_path)
+        fields.load_vocabs(dir_path, self.fields_tuples)
         self.options.gpu_id = self.gpu_id
         self.model = models.load(dir_path, self.fields_tuples)
         if Path(dir_path, constants.OPTIMIZER).exists():
             self.optim = optimizer.load(dir_path, self.model.parameters())
-        self.loaded = True
+        self._loaded = True
 
     def predict(self, texts, batch_size=32, prediction_type='classes'):
-        if not self.loaded:
+        if not self._loaded:
             raise Exception('You should load a saved model first.')
 
-        words_tuple = [('words', self.words_field)]
-        text_dataset = dataset.build_texts(texts, words_tuple, self.options)
+        f_tuples = list(filter(lambda x: x[0] != 'tags', self.fields_tuples))
+        text_dataset = dataset.build_texts(texts, f_tuples, self.options)
         dataset_iter = iterator.build(text_dataset,
                                       self.options.gpu_id,
                                       batch_size,
@@ -52,6 +53,8 @@ class Tagger:
         if prediction_type == 'classes':
             predictions = transform_classes_to_tags(self.tags_field,
                                                     predictions)
+        if isinstance(texts, str):  # special case for a str input
+            return predictions[0]
         return predictions
 
     def predict_classes(self, texts, batch_size=32):
@@ -65,7 +68,7 @@ class Tagger:
                             prediction_type='probas')
 
     def train(self, args):
-        if self.loaded:
+        if self._loaded:
             options = vars(self.options)
         else:
             options = opts.get_default_args()

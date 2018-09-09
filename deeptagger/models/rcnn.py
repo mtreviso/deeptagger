@@ -18,6 +18,12 @@ class RCNN(Model):
         super().__init__(*args, **kwargs)
         # layers
         self.word_emb = None
+        self.prefixes_emb = None
+        self.prefix_length = None
+        self.suffixes_emb = None
+        self.suffix_length = None
+        self.caps_emb = None
+        self.caps_length = None
         self.dropout_emb = None
         self.cnn_1d = None
         self.max_pool = None
@@ -35,7 +41,6 @@ class RCNN(Model):
         # suffix_embeddings_size = options.suffix_embeddings_size
         # caps_embeddings_size = options.caps_embeddings_size
         hidden_size = options.hidden_size[0]
-        vocab_size = len(self.words_field.vocab)
         loss_weights = None
         if options.loss_weights == 'balanced':
             # TODO
@@ -48,19 +53,60 @@ class RCNN(Model):
             options.word_embeddings_size = word_embeddings.size(1)
 
         self.word_emb = nn.Embedding(
-            num_embeddings=vocab_size,
+            num_embeddings=len(self.words_field.vocab),
             embedding_dim=options.word_embeddings_size,
-            padding_idx=self.words_padding_idx,
+            padding_idx=constants.PAD_ID,
             _weight=word_embeddings,
         )
+
+        features_size = options.word_embeddings_size
+        if self.prefixes_field is not None:
+            self.prefixes_emb = nn.Embedding(
+                num_embeddings=len(self.prefixes_field.vocab),
+                embedding_dim=options.prefix_embeddings_size,
+                padding_idx=constants.PAD_ID
+            )
+            self.prefix_length = (options.prefix_max_length -
+                                  options.prefix_min_length + 1)
+            features_size += (self.prefix_length *
+                              options.prefix_embeddings_size)
+
+        if self.suffixes_field is not None:
+            self.suffixes_emb = nn.Embedding(
+                num_embeddings=len(self.suffixes_field.vocab),
+                embedding_dim=options.suffix_embeddings_size,
+                padding_idx=constants.PAD_ID
+            )
+            self.suffix_length = (options.suffix_max_length -
+                                  options.suffix_min_length + 1)
+            features_size += (self.suffix_length *
+                              options.suffix_embeddings_size)
+
+        if self.caps_field is not None:
+            self.caps_emb = nn.Embedding(
+                num_embeddings=len(self.caps_field.vocab),
+                embedding_dim=options.caps_embeddings_size,
+                padding_idx=constants.PAD_ID
+            )
+            self.caps_length = 1
+            features_size += options.caps_embeddings_size
 
         if options.freeze_embeddings:
             self.word_emb.weight.requires_grad = False
             self.word_emb.bias.requires_grad = False
+            if self.prefixes_field is not None:
+                self.prefixes_emb.weight.requires_grad = False
+                self.prefixes_emb.bias.requires_grad = False
+            if self.suffixes_field is not None:
+                self.suffixes_emb.weight.requires_grad = False
+                self.suffixes_emb.bias.requires_grad = False
+            if self.caps_field is not None:
+                self.caps_emb.weight.requires_grad = False
+                self.caps_emb.bias.requires_grad = False
 
         self.dropout_emb = nn.Dropout(options.emb_dropout)
 
-        self.cnn_1d = nn.Conv1d(in_channels=options.word_embeddings_size,
+        self.cnn_1d = nn.Conv1d(in_channels=features_size,
                                 out_channels=options.conv_size,
                                 kernel_size=options.kernel_size,
                                 padding=options.kernel_size // 2)
@@ -89,7 +135,7 @@ class RCNN(Model):
 
         # Loss
         self._loss = nn.NLLLoss(weight=loss_weights,
-                                ignore_index=self.loss_ignore_index)
+                                ignore_index=constants.TAGS_PAD_ID)
         self.is_built = True
 
     def init_weights(self):
@@ -115,17 +161,46 @@ class RCNN(Model):
     def forward(self, batch):
         assert self.is_built
 
-        # (ts, bs) -> (bs, ts)
+        bs, ts = batch.words.shape
         h = batch.words
         mask = h != constants.PAD_ID
         lengths = mask.int().sum(dim=-1)
 
         # initialize GRU hidden state
-        self.hidden = self.init_hidden(batch.words.shape[0],
-                                       self.gru.hidden_size)
+        self.hidden = self.init_hidden(h.shape[0], self.gru.hidden_size)
 
         # (bs, ts) -> (bs, ts, emb_dim)
         h = self.word_emb(h)
+
+        feats = [h]
+        if self.prefixes_field is not None:
+            # (bs, (ts-2)*(maxlen-minlen+1)) ->
+            # (bs, (ts-2)*(max-min+1), emb_dim)
+            h_pre = self.prefixes_emb(batch.prefixes)
+            # (bs, (ts-2)*(max-min+1), emb_dim) ->
+            # (bs, ts*(max-min+1), emb_dim)
+            z = torch.zeros(h_pre.shape[0], self.prefix_length, h_pre.shape[2])
+            h_pre = torch.cat((z, h_pre, z), dim=1)
+            # (bs, ts*(max-min+1), emb_dim) -> (bs, ts, emb_dim*(max-min+1))
+            h_pre = h_pre.view(bs, ts, -1)
+            feats.append(h_pre)
+
+        if self.suffixes_field is not None:
+            h_suf = self.suffixes_emb(batch.suffixes)
+            z = torch.zeros(h_suf.shape[0], self.suffix_length, h_suf.shape[2])
+            h_suf = torch.cat((z, h_suf, z), dim=1)
+            h_suf = h_suf.view(bs, ts, -1)
+            feats.append(h_suf)
+
+        if self.caps_field is not None:
+            h_cap = self.caps_emb(batch.caps)
+            z = torch.zeros(h_cap.shape[0], self.caps_length, h_cap.shape[2])
+            h_cap = torch.cat((z, h_cap, z), dim=1)
+            feats.append(h_cap)
+
+        if feats:
+            h = torch.cat(feats, dim=-1)
+
         h = self.dropout_emb(h)
 
         # Turn (bs, ts, emb_dim) into (bs, emb_dim, ts) for CNN

@@ -7,11 +7,10 @@ STOP = '<eos>'
 # special tokens id (don't edit this order)
 UNK_ID = 0
 PAD_ID = 1
-START_ID = 2
-STOP_ID = 3
 
-# this should be set later
+# this should be set later after building fields
 TAGS_PAD_ID = 0
+NB_LABELS = 0
 
 # output_dir
 OUTPUT_DIR = 'runs'
@@ -24,8 +23,3 @@ OPTIMIZER = 'optim.torch'
 TRAINER = 'trainer.torch'
 VOCAB = 'vocab.torch'
 PREDICTIONS = 'predictions.txt'
-
-
-def set_tags_pad_id(pad_id):
-    global TAGS_PAD_ID
-    TAGS_PAD_ID = pad_id
