@@ -442,9 +442,18 @@ python3 -m deeptagger {predict,train} :args:
 
 
 ## Contributing
-Anyone can help make this project better - read [CONTRIBUTING](CONTRIBUTING.md) to get started!
+Anyone can help make this project better. Feel free to fork and open a pull request - read [CONTRIBUTING](CONTRIBUTING.md) to get started!
 
+
+## Cite
+
+If you use DeepTagger, please cite this paper:
+
+```
+Under publication...
+```
 
 ## License
 MIT. See the [LICENSE](LICENSE) file for more details.
+
 
