@@ -7,14 +7,16 @@ Criar modelos mais complexos:
 	+ CRF
 	+ Attention
 
-Adicionar word embeddings do ELMO
-
-Adicionar viterbi decoder
-
 Adicionar regularização:
 	Dropout depois de quais camadas?
 	BatchNormalization?
 	l1 l2?
+
+
+Adicionar word embeddings do ELMO
+
+Adicionar viterbi decoder
+
 
 Testar com embeddings do carioca
 Testar com diferentes word embeddings

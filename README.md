@@ -74,8 +74,8 @@ args = {
   'del_tag': "_"
 }
 tagger = Tagger()
-model = tagger.train(args)
-model.save('path/to/model-dir/')
+tagger.train(args)
+tagger.save('path/to/model-dir/')
 ```
 
 You can view all arguments and their meaning by calling `deeptagger.help()`. 
@@ -176,6 +176,20 @@ python3 -m deeptagger {predict,train} :args:
 |`--nesterov`                |`None`       |Enables Nesterov momentum. Used only for: sgd. Let unseted to use default values.                                                                                                                        |
 |`--alpha`                   |`None`       |Smoothing constant. Used only for: rmsprop. Let unseted to use default values.                                                                                                                           |
 
+<style>
+table:nth-of-type(1) {
+    display:table;
+    width:100%;
+}
+
+table:nth-of-type(1) th:nth-of-type(1) {
+    width:28%;
+}
+
+table:nth-of-type(1) th:nth-of-type(2) {
+    width:14%;
+}
+</style>
 
 ## Contributing
 Anyone can help make this project better - read [CONTRIBUTING](CONTRIBUTING.md) to get started!
