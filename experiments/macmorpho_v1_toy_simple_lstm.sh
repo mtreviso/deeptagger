@@ -18,5 +18,11 @@ python3 -m deeptagger train \
 					  --early-stopping-patience 3 \
 					  --restore-best-model \
 					  --final-report \
+					  --add-embeddings-vocab \
+					  --epochs 2 \
+					  --load "saved-models/testing-toy-save-simple-lstm/" \
+					  --use-prefixes \
+					  --use-suffixes \
+					  --use-caps
 
 

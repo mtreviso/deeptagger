@@ -2,6 +2,7 @@
 
 Part-of-Speech (PoS) tagger based on Deep Learning.
 
+<a href="https://www.python.org/"><img src="https://img.shields.io/badge/built%20with-Python3-red.svg" alt="built with Python3" /></a>
 [![Build Status](https://travis-ci.com/mtreviso/deeptagger.svg?token=x2rssmYXXPdD5p8iqKt2&branch=master)](https://travis-ci.com/mtreviso/deeptagger)
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
 
@@ -15,7 +16,7 @@ and English. You can download them in the following links:
 
 - [PT-BR](http://mtreviso.github.io/deeptagger-ptbr-models)
 - [EN](http://mtreviso.github.io/deeptagger-en-models)
- 
+
 See next how to install and use DeepTagger.
 
 

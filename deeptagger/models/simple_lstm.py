@@ -18,8 +18,12 @@ class SimpleLSTM(Model):
         # layers
         self.word_emb = None
         self.dropout_emb = None
-        self.cnn_1d = None
-        self.max_pool = None
+        self.prefixes_emb = None
+        self.prefix_length = None
+        self.suffixes_emb = None
+        self.suffix_length = None
+        self.caps_emb = None
+        self.caps_length = None
         self.is_bidir = None
         self.sum_bidir = None
         self.gru = None
@@ -34,7 +38,7 @@ class SimpleLSTM(Model):
         # suffix_embeddings_size = options.suffix_embeddings_size
         # caps_embeddings_size = options.caps_embeddings_size
         hidden_size = options.hidden_size[0]
-        vocab_size = len(self.words_field.vocab)
+
         loss_weights = None
         if options.loss_weights == 'balanced':
             # TODO
@@ -47,19 +51,59 @@ class SimpleLSTM(Model):
             options.word_embeddings_size = word_embeddings.size(1)
 
         self.word_emb = nn.Embedding(
-            num_embeddings=vocab_size,
+            num_embeddings=len(self.words_field.vocab),
             embedding_dim=options.word_embeddings_size,
             padding_idx=constants.PAD_ID,
-            _weight=word_embeddings,
+            _weight=word_embeddings
         )
+
+        features_size = options.word_embeddings_size
+        if self.prefixes_field is not None:
+            self.prefixes_emb = nn.Embedding(
+                num_embeddings=len(self.prefixes_field.vocab),
+                embedding_dim=options.prefix_embeddings_size,
+                padding_idx=constants.PAD_ID
+            )
+            self.prefix_length = (options.prefix_max_length -
+                                  options.prefix_min_length + 1)
+            features_size += (self.prefix_length *
+                              options.prefix_embeddings_size)
+
+        if self.suffixes_field is not None:
+            self.suffixes_emb = nn.Embedding(
+                num_embeddings=len(self.suffixes_field.vocab),
+                embedding_dim=options.suffix_embeddings_size,
+                padding_idx=constants.PAD_ID
+            )
+            self.suffix_length = (options.suffix_max_length -
+                                  options.suffix_min_length + 1)
+            features_size += (self.suffix_length *
+                              options.suffix_embeddings_size)
+
+        if self.caps_field is not None:
+            self.caps_emb = nn.Embedding(
+                num_embeddings=len(self.caps_field.vocab),
+                embedding_dim=options.caps_embeddings_size,
+                padding_idx=constants.PAD_ID)
+            self.caps_length = 1
+            features_size += options.caps_embeddings_size
 
         if options.freeze_embeddings:
             self.word_emb.weight.requires_grad = False
             self.word_emb.bias.requires_grad = False
+            if self.prefixes_field is not None:
+                self.prefixes_emb.weight.requires_grad = False
+                self.prefixes_emb.bias.requires_grad = False
+            if self.suffixes_field is not None:
+                self.suffixes_emb.weight.requires_grad = False
+                self.suffixes_emb.bias.requires_grad = False
+            if self.caps_field is not None:
+                self.caps_emb.weight.requires_grad = False
+                self.caps_emb.bias.requires_grad = False
 
         self.is_bidir = options.bidirectional
         self.sum_bidir = options.sum_bidir
-        self.gru = nn.LSTM(options.word_embeddings_size,
+        self.gru = nn.LSTM(features_size,
                            hidden_size,
                            bidirectional=options.bidirectional,
                            batch_first=True)
@@ -95,6 +139,7 @@ class SimpleLSTM(Model):
         assert self.is_built
 
         # (ts, bs) -> (bs, ts)
+        bs, ts = batch.words.shape
         h = batch.words
         mask = h != constants.PAD_ID
         lengths = mask.int().sum(dim=-1)
@@ -106,6 +151,35 @@ class SimpleLSTM(Model):
         # (bs, ts) -> (bs, ts, emb_dim)
         h = self.word_emb(h)
         h = self.dropout_emb(h)
+
+        feats = [h]
+        if self.prefixes_field is not None:
+            # (bs, (ts-2)*(maxlen-minlen+1)) ->
+            # (bs, (ts-2)*(max-min+1), emb_dim)
+            h_pre = self.prefixes_emb(batch.prefixes)
+            # (bs, (ts-2)*(max-min+1), emb_dim) ->
+            # (bs, ts*(max-min+1), emb_dim)
+            z = torch.zeros(h_pre.shape[0], self.prefix_length, h_pre.shape[2])
+            h_pre = torch.cat((z, h_pre, z), dim=1)
+            # (bs, ts*(max-min+1), emb_dim) -> (bs, ts, emb_dim*(max-min+1))
+            h_pre = h_pre.view(bs, ts, -1)
+            feats.append(h_pre)
+
+        if self.suffixes_field is not None:
+            h_suf = self.suffixes_emb(batch.suffixes)
+            z = torch.zeros(h_suf.shape[0], self.suffix_length, h_suf.shape[2])
+            h_suf = torch.cat((z, h_suf, z), dim=1)
+            h_suf = h_suf.view(bs, ts, -1)
+            feats.append(h_suf)
+
+        if self.caps_field is not None:
+            h_cap = self.caps_emb(batch.caps)
+            z = torch.zeros(h_cap.shape[0], self.caps_length, h_cap.shape[2])
+            h_cap = torch.cat((z, h_cap, z), dim=1)
+            feats.append(h_cap)
+
+        if feats:
+            h = torch.cat(feats, dim=-1)
 
         # (bs, ts, pool_size) -> (bs, ts, hidden_size)
         h = pack(h, lengths, batch_first=True)

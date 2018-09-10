@@ -51,10 +51,6 @@ def run(options):
         fields.load_vocabs(options.load, fields_tuples)
         logging.info('Word vocab size: {}'.format(len(words_field.vocab)))
         logging.info('Tag vocab size: {}'.format(len(tags_field.vocab)))
-        if len(fields_tuples) > 2:
-            for name, field in fields_tuples[2:]:
-                logging.info('{} vocab size: {}'.format(name,
-                                                        len(field.vocab)))
         logging.info('Loading model...')
         model = models.load(options.load, fields_tuples)
         logging.info('Loading optimizer...')
@@ -64,10 +60,6 @@ def run(options):
         fields.build_vocabs(fields_tuples, train_dataset, datasets, options)
         logging.info('Word vocab size: {}'.format(len(words_field.vocab)))
         logging.info('Tag vocab size: {}'.format(len(tags_field.vocab)))
-        if len(fields_tuples) > 2:
-            for name, field in fields_tuples[2:]:
-                logging.info('{} vocab size: {}'.format(name,
-                                                        len(field.vocab)))
         logging.info('Building model...')
         model = models.build(options, fields_tuples)
         logging.info('Building optimizer...')
