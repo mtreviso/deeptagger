@@ -3,6 +3,8 @@ from abc import ABCMeta, abstractmethod
 
 import torch
 
+from deeptagger.models.modules.handcrafted import HandCrafted
+
 
 class Model(torch.nn.Module):
     __metaclass__ = ABCMeta
@@ -18,9 +20,12 @@ class Model(torch.nn.Module):
         self.words_field = words_field
         self.tags_field = tags_field
         # Extra features
-        self.prefixes_field = prefixes_field
-        self.suffixes_field = suffixes_field
-        self.caps_field = caps_field
+        self.handcrafted = HandCrafted(prefixes_field=prefixes_field,
+                                       suffixes_field=suffixes_field,
+                                       caps_field=caps_field)
+        self.use_handcrafed = bool(prefixes_field is not None
+                                   or suffixes_field is not None
+                                   or caps_field is not None)
         # Building flag
         self.is_built = False
         # Loss function has to be defined in build()

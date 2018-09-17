@@ -1,5 +1,3 @@
-Criar modulo de features para que reuse o seu forward e build
-
 Criar modelos mais complexos:
 	CNN Only
 	RNN Only (SimpleRNN -> LSTM e GRU)
@@ -12,11 +10,10 @@ Adicionar regularização:
 	BatchNormalization?
 	l1 l2?
 
-Adicionar word embeddings do ELMO
-Adicionar viterbi decoder
-
-
 Testar com embeddings do carioca
 Testar com diferentes word embeddings
+Adicionar viterbi decoder
+Adicionar word embeddings do ELMO
+Adicionar BPE vocab
 
 Scripts para plotar loss/acc em relacao as epocas
