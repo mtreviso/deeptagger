@@ -9,11 +9,10 @@ from deeptagger.models.model import Model
 
 
 class RCNN(Model):
-    """Recurrent Convolutional Neural Network
-
-    TODO: add references.
-
+    """Recurrent Convolutional Neural Network.
+    As described in: https://arxiv.org/pdf/1610.00211.pdf
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # layers

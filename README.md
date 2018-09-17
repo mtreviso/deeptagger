@@ -79,7 +79,7 @@ tagger.train(args)
 tagger.save('path/to/model-dir/')
 ```
 
-You can view all arguments and their meaning by calling `deeptagger.help()`. 
+You can view all arguments and their meaning by calling `python3 -m deeptagger --help`. 
 Or take a look at the section [arguments](#arguments).
 
 
@@ -100,7 +100,8 @@ You can obtain more info for each command by passing the `--help` flag.
 
 ## Examples
 
-In the [examples folder](https://github.com/mtreviso/deeptagger/tree/master/examples) of the repository, you will find examples on real Brazilian Portuguese and English corpora.
+In the [examples folder](https://github.com/mtreviso/deeptagger/tree/master/examples) 
+of the repository, you will find examples on real Brazilian Portuguese and English corpora.
 
 
 ## Arguments

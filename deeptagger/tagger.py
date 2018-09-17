@@ -85,6 +85,7 @@ class Tagger:
         self.fields_tuples = result[1]
         self.model = result[2]
         self.optim = result[3]
+        self._loaded = True
 
     def save(self, dir_path):
         opts.save(dir_path, self.options)

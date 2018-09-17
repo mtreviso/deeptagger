@@ -9,9 +9,7 @@ from deeptagger.models.model import Model
 
 
 class SimpleLSTM(Model):
-    """Just a regular LSTM network
-    TODO: add references.
-    """
+    """Just a regular one-layer LSTM network."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -34,9 +32,6 @@ class SimpleLSTM(Model):
         self.sigmoid = None
 
     def build(self, options):
-        # prefix_embeddings_size = options.prefix_embeddings_size
-        # suffix_embeddings_size = options.suffix_embeddings_size
-        # caps_embeddings_size = options.caps_embeddings_size
         hidden_size = options.hidden_size[0]
 
         loss_weights = None

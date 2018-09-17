@@ -1,3 +1,5 @@
+Criar modulo de features para que reuse o seu forward e build
+
 Criar modelos mais complexos:
 	CNN Only
 	RNN Only (SimpleRNN -> LSTM e GRU)

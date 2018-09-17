@@ -48,3 +48,8 @@ def configure_seed(seed):
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
+
+
+def empty_cache(gpu_id):
+    if gpu_id is not None:
+        torch.cuda.empty_cache()

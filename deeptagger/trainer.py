@@ -125,7 +125,7 @@ class Trainer:
             loss = self.model.loss(pred, batch.tags)
             loss.backward()
             self.optimizer.step()
-            self.train_stats.add(loss.item(), pred, batch.tags)
+            self.train_stats.update(loss.item(), pred, batch.tags)
             report_progress(i, len(self.train_iter), self.train_stats.loss / i)
             indexes.extend(batch.words)
         inv_vocab = self.train_iter.dataset.fields['words'].vocab.itos
@@ -152,7 +152,7 @@ class Trainer:
             for i, batch in enumerate(dataset_iter, start=1):
                 pred = self.model(batch)
                 loss = self.model.loss(pred, batch.tags)
-                stats.add(loss.item(), pred, batch.tags)
+                stats.update(loss.item(), pred, batch.tags)
                 report_progress(i, len(dataset_iter), stats.loss / i)
                 indexes.extend(batch.words)
         inv_vocab = dataset_iter.dataset.fields['words'].vocab.itos

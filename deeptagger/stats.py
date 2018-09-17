@@ -69,7 +69,7 @@ class Stats(object):
     def nb_batches(self):
         return len(self.golds)
 
-    def add(self, loss, preds, golds):
+    def update(self, loss, preds, golds):
         mask = golds != self.mask_id
         pred_probs = torch.exp(preds)
         pred_classes = pred_probs.argmax(dim=-1)
