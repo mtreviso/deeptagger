@@ -35,7 +35,8 @@ class MLPScorer(Scorer):
         self.layers = nn.ModuleList(layer_list)
 
     def forward(self, query, keys):
-        layer_in = torch.cat([query.unsqueeze(1).expand_as(keys), keys], dim=-1)
+        layer_in = torch.cat([query.unsqueeze(1).expand_as(keys), keys],
+                             dim=-1)
         layer_in = layer_in.reshape(-1, layer_in.size(-1))
         for layer in self.layers:
             layer_in = layer(layer_in)

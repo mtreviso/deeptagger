@@ -2,6 +2,7 @@
 cd ..
 python3 -m deeptagger train \
                       --model rcnn \
+                      --rnn-type lstm \
                       --bidirectional \
                       --train-path "data/corpus/pt/macmorpho_v1_toy/train.txt" \
 					  --dev-path "data/corpus/pt/macmorpho_v1_toy/dev.txt" \

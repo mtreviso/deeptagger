@@ -1,8 +1,4 @@
-import torch
 import torch.nn as nn
-
-
-from deeptagger import constants
 
 
 class CRFLayer(nn.Module):
@@ -10,11 +6,14 @@ class CRFLayer(nn.Module):
 
     def __init__(self):
         super().__init__()
+        self.is_built = False
+        self.dropout = None
         # layers
         pass
 
     def build(self, options):
         self.is_built = True
+        self.dropout = options.dropout
 
     def init_weights(self):
         pass

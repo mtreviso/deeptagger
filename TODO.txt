@@ -1,5 +1,4 @@
 Criar modelos mais complexos:
-	CNN Only
 	RNN Only (SimpleRNN -> LSTM e GRU)
 	RCNN com LSTM e GRU
 	+ CRF

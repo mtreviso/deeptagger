@@ -3,13 +3,17 @@ from pathlib import Path
 
 from deeptagger import constants
 from deeptagger import opts
+from .cnn import CNN
+from .rnn import RNN
 from .rcnn import RCNN
 from .simple_lstm import SimpleLSTM
+
 
 available_models = {
     'simple_lstm': SimpleLSTM,
     'rcnn': RCNN,
-    ''
+    'cnn': CNN,
+    'rnn': RNN
 }
 
 

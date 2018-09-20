@@ -167,13 +167,9 @@ def model_opts(parser):
                        help='Dropout rate applied after embedding layers.')
     group.add_argument('--rnn-type',
                        type=str,
-                       default='lstm',
+                       default='rnn',
                        choices=['rnn', 'lstm', 'gru'],
                        help='RNN cell type: LSTM, GRU or a regular RNN.')
-    group.add_argument('--rnn-layers',
-                       type=int,
-                       default=1,
-                       help='Number of stacked RNN layers.')
     group.add_argument('--bidirectional',
                        action='store_true',
                        help='Set RNNs to be bidirectional.')

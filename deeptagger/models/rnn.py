@@ -8,7 +8,7 @@ from deeptagger import constants
 from deeptagger.models.model import Model
 
 
-class SimpleLSTM(Model):
+class RNN(Model):
     """Just a regular rnn (LSTM or GRU) network."""
 
     def __init__(self, *args, **kwargs):
@@ -19,12 +19,12 @@ class SimpleLSTM(Model):
         self.is_bidir = None
         self.sum_bidir = None
         self.rnn_layers = 1
-        self.rnn_type = 'lstm'
+        self.rnn_type = 'rnn'
         self.rnn = None
         self.hidden = None
-        self.dropout_gru = None
+        self.dropout_rnn = None
         self.linear_out = None
-        self.relu = None
+        self.selu = None
         self.sigmoid = None
 
     def build(self, options):
@@ -60,34 +60,22 @@ class SimpleLSTM(Model):
         self.is_bidir = options.bidirectional
         self.sum_bidir = options.sum_bidir
         self.rnn_type = options.rnn_type
-        self.rnn_layers = options.layers
 
         rnn_class = nn.RNN
-        if self.rnn_type == 'rnn'
+        if self.rnn_type == 'gru':
             rnn_class = nn.GRU
         elif self.rnn_type == 'lstm':
             rnn_class = nn.LSTM
 
-        rnns = []
-        for _ in range(self.rnn_layers):
-
-            layer = rnn_class(features_size,
-                              hidden_size,
-                              bidirectional=self.is_bidir,
-                              batch_first=True)
-            activation =
-            rnns.append(layer)
-
-        self.rnn = nn.ModuleList(rnns)
-
-        self.gru =
-
+        self.rnn = rnn_class(features_size,
+                             hidden_size,
+                             bidirectional=self.is_bidir,
+                             batch_first=True)
 
         n = 2 if self.is_bidir else 1
         n = 1 if self.sum_bidir else n
         self.linear_out = nn.Linear(n * hidden_size, self.nb_classes)
 
-        self.tanh = torch.nn.Tanh()
         self.selu = torch.nn.SELU()
         self.dropout_emb = nn.Dropout(options.emb_dropout)
         self.dropout_rnn = nn.Dropout(options.dropout)
@@ -106,8 +94,11 @@ class SimpleLSTM(Model):
     def init_hidden(self, batch_size, hidden_size):
         # The axes semantics are (num_layers, minibatch_size, hidden_dim)
         num_layers = 2 if self.is_bidir else 1
-        return (torch.zeros(num_layers, batch_size, hidden_size),
-                torch.zeros(num_layers, batch_size, hidden_size))
+        if self.rnn_type == 'lstm':
+            return (torch.zeros(num_layers, batch_size, hidden_size),
+                    torch.zeros(num_layers, batch_size, hidden_size))
+        else:
+            return torch.zeros(num_layers, batch_size, hidden_size)
 
     def forward(self, batch):
         assert self.is_built
@@ -120,7 +111,7 @@ class SimpleLSTM(Model):
 
         # initialize GRU hidden state
         self.hidden = self.init_hidden(batch.words.shape[0],
-                                       self.gru.hidden_size)
+                                       self.rnn.hidden_size)
 
         # (bs, ts) -> (bs, ts, emb_dim)
         h = self.word_emb(h)
@@ -135,15 +126,17 @@ class SimpleLSTM(Model):
 
         # (bs, ts, pool_size) -> (bs, ts, hidden_size)
         h = pack(h, lengths, batch_first=True)
-        h, self.hidden = self.gru(h, self.hidden)
+        h, self.hidden = self.rnn(h, self.hidden)
         h, _ = unpack(h, batch_first=True)
 
         # if you'd like to sum instead of concatenate:
         if self.sum_bidir:
-            h = (h[:, :, :self.gru.hidden_size] +
-                 h[:, :, self.gru.hidden_size:])
+            h = (h[:, :, :self.rnn.hidden_size] +
+                 h[:, :, self.rnn.hidden_size:])
 
-        h = self.dropout_gru(h)
+        h = self.selu(h)
+
+        h = self.dropout_rnn(h)
 
         # (bs, ts, hidden_size) -> (bs, ts, nb_classes)
         h = F.log_softmax(self.linear_out(h), dim=-1)

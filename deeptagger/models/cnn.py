@@ -6,7 +6,7 @@ from deeptagger import constants
 from deeptagger.models.model import Model
 
 
-class RCNN(Model):
+class CNN(Model):
     """Simple Convolutional Neural Network 1D."""
 
     def __init__(self, *args, **kwargs):
