@@ -8,7 +8,8 @@ from .simple_lstm import SimpleLSTM
 
 available_models = {
     'simple_lstm': SimpleLSTM,
-    'rcnn': RCNN
+    'rcnn': RCNN,
+    ''
 }
 
 

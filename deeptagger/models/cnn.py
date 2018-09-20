@@ -7,9 +7,7 @@ from deeptagger.models.model import Model
 
 
 class RCNN(Model):
-    """ 1D Convolutional Neural Network.
-    As described in: https://arxiv.org/pdf/1610.00211.pdf
-    """
+    """Simple Convolutional Neural Network 1D."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -55,19 +53,14 @@ class RCNN(Model):
                                 out_channels=options.conv_size,
                                 kernel_size=options.kernel_size,
                                 padding=options.kernel_size // 2)
-
         self.max_pool = nn.MaxPool1d(options.pool_length,
                                      padding=options.pool_length // 2)
-
         self.linear_out = nn.Linear(options.conv_size // options.pool_length +
                                     options.pool_length // 2,
                                     self.nb_classes)
-
         self.relu = torch.nn.ReLU()
 
         self.init_weights()
-
-        # Loss
         self._loss = nn.NLLLoss(weight=loss_weights,
                                 ignore_index=constants.TAGS_PAD_ID)
         self.is_built = True
