@@ -1,8 +1,7 @@
 Criar modelos mais complexos:
-	RNN Only (SimpleRNN -> LSTM e GRU)
-	RCNN com LSTM e GRU
 	+ CRF
 	+ Attention
+	Transformer
 
 Adicionar regularização:
 	Dropout depois de quais camadas?

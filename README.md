@@ -264,6 +264,11 @@ python3 -m deeptagger {predict,train} :args:
 <td>Dropout rate applied after embedding layers.</td>
 </tr>
 <tr>
+<td><code>--rnn-type</code></td>
+<td><code>rnn</code></td>
+<td>RNN cell type. Choices are: <code>{rnn, gru, lstm}</td>
+</tr>
+<tr>
 <td><code>--bidirectional</code></td>
 <td></td>
 <td>Set RNNs to be bidirectional.</td>
