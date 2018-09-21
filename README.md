@@ -100,7 +100,7 @@ You can obtain more info for each command by passing the `--help` flag.
 
 ## Examples
 
-In the [examples folder](https://github.com/mtreviso/deeptagger/tree/master/examples) 
+In the [experiments folder](https://github.com/mtreviso/deeptagger/tree/master/experiments) 
 of the repository, you will find examples on real Brazilian Portuguese and English corpora.
 
 

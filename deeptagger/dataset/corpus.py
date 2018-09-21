@@ -1,7 +1,7 @@
 import logging
 
 from torchtext import data
-from deeptagger.cleaner import Cleaner
+from deeptagger.dataset.cleaner import Cleaner
 from deeptagger.features import (extract_prefixes, extract_suffixes,
                                  extract_caps)
 

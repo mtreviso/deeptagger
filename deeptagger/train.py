@@ -1,8 +1,7 @@
 import logging
 
-from deeptagger import dataset
+from deeptagger.dataset import dataset, fields
 from deeptagger import features
-from deeptagger import fields
 from deeptagger import iterator
 from deeptagger import models
 from deeptagger import optimizer

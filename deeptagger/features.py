@@ -1,5 +1,5 @@
 from deeptagger import opts
-from deeptagger import fields
+from deeptagger.dataset import fields
 
 
 def build(options):

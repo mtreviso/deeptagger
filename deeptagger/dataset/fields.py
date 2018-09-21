@@ -6,8 +6,8 @@ import torch
 from torchtext.data import Field
 
 from deeptagger import constants
-from deeptagger.vectors import AvailableEmbeddings
-from deeptagger.vocabulary import Vocabulary
+from deeptagger.dataset.vectors import AvailableEmbeddings
+from deeptagger.dataset.vocabulary import Vocabulary
 
 
 def load_vectors(options):
