@@ -80,7 +80,7 @@ tagger.save('path/to/model-dir/')
 ```
 
 You can view all arguments and their meaning by calling `python3 -m deeptagger --help`. 
-Or take a look at the section [arguments](#arguments).
+Or take a look at the [arguments quick reference table](#arguments).
 
 
 #### Invoking in standalone mode (no install required)
