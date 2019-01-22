@@ -111,7 +111,8 @@ class Corpus:
                 tags_for_example.append(' '.join(tags))
         # add words and tags examples
         self.fields_examples[self.attr_index['words']] = words_for_example
-        self.fields_examples[self.attr_index['tags']] = tags_for_example
+        if 'tags' in self.attr_index:
+            self.fields_examples[self.attr_index['tags']] = tags_for_example
         # then add each corresponding sentence from each field
         nb_lines = [len(fe) for fe in self.fields_examples if fe]
         # assert files have the same size
@@ -130,12 +131,12 @@ class Corpus:
         t = text.strip()
         t = Cleaner.trim(t)
         t = Cleaner.transform_numbers(t)
-        t = Cleaner.transform_decimals(t)
-        t = Cleaner.transform_urls(t)
-        t = Cleaner.transform_dollar(t)
-        t = Cleaner.transform_dates(t)
-        t = Cleaner.transform_hours(t)
-        t = Cleaner.transform_emails(t)
-        t = Cleaner.fix_quotes(t)
-        t = Cleaner.fix_mistyped_tokens(t)
+        # t = Cleaner.transform_decimals(t)
+        # t = Cleaner.transform_urls(t)
+        # t = Cleaner.transform_dollar(t)
+        # t = Cleaner.transform_dates(t)
+        # t = Cleaner.transform_hours(t)
+        # t = Cleaner.transform_emails(t)
+        # t = Cleaner.fix_quotes(t)
+        # t = Cleaner.fix_mistyped_tokens(t)
         return t

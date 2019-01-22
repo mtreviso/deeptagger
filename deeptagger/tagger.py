@@ -87,6 +87,8 @@ class Tagger:
         self._loaded = True
 
     def save(self, dir_path):
+        dir_path = Path(dir_path)
+        dir_path.mkdir(parents=True, exist_ok=True)
         opts.save(dir_path, self.options)
         fields.save_vocabs(dir_path, self.fields_tuples)
         models.save(dir_path, self.model)

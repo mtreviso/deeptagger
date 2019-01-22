@@ -26,12 +26,14 @@ def build_vocabs(fields_tuples, train_dataset, all_datasets, options):
     dict_fields.update(dict(fields_tuples))
     words_field = dict_fields['words']
     tags_field = dict_fields['tags']
-    words_field.build_vocab(train_dataset,
-                            vectors=vectors,
-                            max_size=options.vocab_size,
-                            min_freq=options.vocab_min_frequency,
-                            rare_with_vectors=options.keep_rare_with_embedding,
-                            add_vectors_vocab=options.add_embeddings_vocab)
+    words_field.build_vocab(
+        train_dataset,
+        vectors=vectors,
+        max_size=options.vocab_size,
+        min_freq=options.vocab_min_frequency,
+        keep_rare_with_vectors=options.keep_rare_with_embedding,
+        add_vectors_vocab=options.add_embeddings_vocab
+    )
     tags_field.build_vocab(*all_datasets)
     if 'prefixes' in dict_fields:
         dict_fields['prefixes'].build_vocab(train_dataset)
@@ -41,7 +43,8 @@ def build_vocabs(fields_tuples, train_dataset, all_datasets, options):
         dict_fields['caps'].build_vocab(train_dataset)
     constants.PAD_ID = dict_fields['words'].vocab.stoi[constants.PAD]
     for attr in ['words', 'prefixes', 'suffixes', 'caps']:
-        assert(constants.PAD_ID == dict_fields[attr].vocab.stoi[constants.PAD])
+        if attr in dict_fields:
+            assert (constants.PAD_ID == dict_fields[attr].vocab.stoi[constants.PAD])  # NOQA
     constants.TAGS_PAD_ID = dict_fields['tags'].vocab.stoi[constants.PAD]
     constants.NB_LABELS = len(dict_fields['tags'].vocab)
 
@@ -56,7 +59,7 @@ def load_vocabs(path, fields_tuples):
     dict_fields = dict(fields_tuples)
     constants.PAD_ID = dict_fields['words'].vocab.stoi[constants.PAD]
     for attr in ['words', 'prefixes', 'suffixes', 'caps']:
-        assert(constants.PAD_ID == dict_fields[attr].vocab.stoi[constants.PAD])
+        assert (constants.PAD_ID == dict_fields[attr].vocab.stoi[constants.PAD])
     constants.TAGS_PAD_ID = dict_fields['tags'].vocab.stoi[constants.PAD]
     constants.NB_LABELS = len(dict_fields['tags'].vocab)
 
@@ -83,19 +86,13 @@ class WordsField(Field):
        values from constant.py and with the vocabulary
        defined in vocabulary.py."""
 
-    def __init__(self,
-                 unk_token=constants.UNK,
-                 pad_token=constants.PAD,
-                 init_token=constants.START,
-                 eos_token=constants.STOP,
-                 batch_first=True,
-                 **kwargs):
-        super().__init__(**kwargs)
-        self.unk_token = unk_token
-        self.pad_token = pad_token
-        self.init_token = init_token
-        self.eos_token = eos_token
-        self.batch_first = batch_first
+    def __init__(self, **kwargs):
+        super().__init__(unk_token=constants.UNK,
+                         pad_token=constants.PAD,
+                         init_token=constants.START,
+                         eos_token=constants.STOP,
+                         batch_first=True,
+                         **kwargs)
         self.vocab_cls = Vocabulary
 
 
@@ -103,29 +100,23 @@ class TagsField(Field):
     """Defines a field for tag tokens by setting unk_token to None
        and pad_token to constants.PAD as default."""
 
-    def __init__(self,
-                 unk_token=None,
-                 pad_token=constants.PAD,
-                 batch_first=True,
-                 **kwargs):
-        super().__init__(**kwargs)
-        self.unk_token = unk_token
-        self.pad_token = pad_token
-        self.batch_first = batch_first
+    def __init__(self, **kwargs):
+        super().__init__(unk_token=constants.UNK,
+                         pad_token=constants.PAD,
+                         is_target=True,
+                         batch_first=True,
+                         **kwargs)
 
 
 class AffixesField(Field):
     """Defines a field for affixes (prefixes and suffixes) by setting only
     unk_token and pad_token to their default constant value."""
-    def __init__(self,
-                 unk_token=constants.UNK,
-                 pad_token=constants.PAD,
-                 batch_first=True,
-                 **kwargs):
-        super().__init__(**kwargs)
-        self.unk_token = unk_token
-        self.pad_token = pad_token
-        self.batch_first = batch_first
+
+    def __init__(self, **kwargs):
+        super().__init__(unk_token=constants.UNK,
+                         pad_token=constants.PAD,
+                         batch_first=True,
+                         **kwargs)
 
 
 CapsField = AffixesField

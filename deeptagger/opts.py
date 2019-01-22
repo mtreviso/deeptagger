@@ -14,9 +14,7 @@ def load(path):
 
 
 def save(path, options):
-    config_path = Path(path)
-    config_path.mkdir(exist_ok=True)
-    config_path = Path(config_path, constants.CONFIG)
+    config_path = Path(path, constants.CONFIG)
     json.dump(vars(options), open(str(config_path), 'w'), indent=4)
 
 

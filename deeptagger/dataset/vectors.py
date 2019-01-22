@@ -37,7 +37,7 @@ class WordEmbeddings(Vectors):
         else:
             return self.unk_init(torch.Tensor(1, self.dim))
 
-    def cache(self, name, cache, url=None):
+    def cache(self, name, cache, url=None, max_vectors=None):
         if self.emb_format in ['polyglot', 'glove']:
             from polyglot.mapping import Embedding
             if self.emb_format == 'polyglot':

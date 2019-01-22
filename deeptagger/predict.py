@@ -36,9 +36,6 @@ def run(options):
         test_tuples = list(filter(lambda x: x[0] != 'tags', fields_tuples))
         test_dataset = dataset.build_texts(options.text, test_tuples, options)
 
-        for sample in test_dataset:
-            print(sample.prefixes)
-
         logging.info('Building iterator...')
         dataset_iter = iterator.build(test_dataset, options.gpu_id,
                                       options.dev_batch_size, is_train=False)
@@ -74,7 +71,6 @@ def save_predicted_probabilities(directory, predictions):
     directory.mkdir(parents=True, exist_ok=True)
     output_path = Path(directory, constants.PREDICTIONS)
     logging.info('Saving predictions to {}'.format(output_path))
-    ex_str = '\n'.join([' '.join(map(str, sentence))
-                        for sentence in predictions])
+    ex_str = '\n'.join([' '.join(map(str, sent)) for sent in predictions])
     Path(output_path).write_text(ex_str)
     return ex_str

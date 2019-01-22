@@ -26,11 +26,11 @@ class Vocabulary(Vocab):
         counter,
         max_size=None,
         min_freq=1,
-        specials=['<pad>'],
+        specials=None,
         vectors=None,
         unk_init=None,
         vectors_cache=None,
-        rare_with_vectors=True,
+        keep_rare_with_vectors=True,
         add_vectors_vocab=False
     ):
         """Create a Vocab object from a collections.Counter.
@@ -53,7 +53,7 @@ class Vocabulary(Vocab):
                 Tensor and returns a Tensor of the same size.
                 Default: torch.Tensor.zero_
             vectors_cache: dir for cached vectors. Default: '.vector_cache'
-            rare_with_vectors: if True and a vectors object is passed, then
+            keep_rare_with_vectors: if True and a vectors object is passed, then
                 it will add words that appears less than min_freq but are in
                 vectors vocabulary. Default: True.
             add_vectors_vocab: by default, the vocab is built using only words
@@ -61,6 +61,9 @@ class Vocabulary(Vocab):
             add words that are not in the datasets but are in the vectors vocab
             (e.g. words from polyglot vectors). Default: False
         """
+        if specials is None:
+            specials = ['<pad>']
+
         self.freqs = counter
         counter = counter.copy()
         min_freq = max(min_freq, 1)
@@ -84,7 +87,7 @@ class Vocabulary(Vocab):
         # vocabulary
         for word, freq in words_and_frequencies:
             if freq < min_freq:
-                if vectors is not None and rare_with_vectors:
+                if vectors is not None and keep_rare_with_vectors:
                     for v in vectors:
                         if word in v.stoi:
                             self.itos.append(word)
@@ -110,7 +113,11 @@ class Vocabulary(Vocab):
             v_itos = vset - set(self.itos)
             self.itos.extend(list(v_itos))
 
-        self.stoi = defaultdict(_default_unk_index)
+        if '<unk>' in specials:  # hard-coded for now
+            self.stoi = defaultdict(_default_unk_index)
+        else:
+            self.stoi = defaultdict()
+
         # stoi is simply a reverse dict for itos
         self.stoi.update({tok: i for i, tok in enumerate(self.itos)})
 

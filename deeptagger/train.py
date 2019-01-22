@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 from deeptagger.dataset import dataset, fields
 from deeptagger import features
@@ -80,13 +81,16 @@ def run(options):
     trainer.train()
 
     if options.save:
+        logging.info('Saving path: {}'.format(options.save))
+        config_path = Path(options.save)
+        config_path.mkdir(parents=True, exist_ok=True)
         logging.info('Saving config options...')
-        opts.save(options.save, options)
+        opts.save(config_path, options)
         logging.info('Saving vocabularies...')
-        fields.save_vocabs(options.save, fields_tuples)
+        fields.save_vocabs(config_path, fields_tuples)
         logging.info('Saving model...')
-        models.save(options.save, model)
+        models.save(config_path, model)
         logging.info('Saving optimizer...')
-        optimizer.save(options.save, optim)
+        optimizer.save(config_path, optim)
 
     return options, fields_tuples, model, optim

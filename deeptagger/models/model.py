@@ -3,7 +3,7 @@ from abc import ABCMeta, abstractmethod
 
 import torch
 
-from deeptagger.models.modules.handcrafted import HandCrafted
+from deeptagger.modules.handcrafted import HandCrafted
 
 
 class Model(torch.nn.Module):
