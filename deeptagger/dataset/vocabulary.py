@@ -53,9 +53,9 @@ class Vocabulary(Vocab):
                 Tensor and returns a Tensor of the same size.
                 Default: torch.Tensor.zero_
             vectors_cache: dir for cached vectors. Default: '.vector_cache'
-            keep_rare_with_vectors: if True and a vectors object is passed, then
-                it will add words that appears less than min_freq but are in
-                vectors vocabulary. Default: True.
+            keep_rare_with_vectors: if True and a vectors object is passed,
+                then it will add words that appears less than min_freq
+                but are in vectors vocabulary. Default: True.
             add_vectors_vocab: by default, the vocab is built using only words
             from the provided datasets. If this flag is true, the vocab will
             add words that are not in the datasets but are in the vectors vocab

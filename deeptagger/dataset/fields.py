@@ -59,7 +59,8 @@ def load_vocabs(path, fields_tuples):
     dict_fields = dict(fields_tuples)
     constants.PAD_ID = dict_fields['words'].vocab.stoi[constants.PAD]
     for attr in ['words', 'prefixes', 'suffixes', 'caps']:
-        assert (constants.PAD_ID == dict_fields[attr].vocab.stoi[constants.PAD])
+        if attr in dict_fields:
+            assert (constants.PAD_ID == dict_fields[attr].vocab.stoi[constants.PAD])  # NOQA
     constants.TAGS_PAD_ID = dict_fields['tags'].vocab.stoi[constants.PAD]
     constants.NB_LABELS = len(dict_fields['tags'].vocab)
 
