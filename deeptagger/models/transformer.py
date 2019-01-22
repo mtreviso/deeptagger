@@ -28,27 +28,66 @@ class Transformer(nn.Module):
         super().__init__()
         query_size = key_size = value_size = hidden_size
 
-        encoder_emb = PositionalEmbedding(source_vocab_size, hidden_size, max_seq_len=max_seq_len, dropout=dropout_emb)
+        encoder_emb = PositionalEmbedding(source_vocab_size,
+                                          hidden_size,
+                                          max_seq_len=max_seq_len,
+                                          dropout=dropout_emb)
         encoder_scorer = DotProductScorer()
-        encoder_attn = MultiHeadedAttention(encoder_scorer, nb_heads, query_size, key_size, value_size, hidden_size,
+        encoder_attn = MultiHeadedAttention(encoder_scorer,
+                                            nb_heads,
+                                            query_size,
+                                            key_size,
+                                            value_size,
+                                            hidden_size,
                                             dropout=dropout_encoder)
-        encoder_ff = PositionwiseFeedForward(hidden_size, ff_hidden_size, dropout=dropout_encoder)
-        encoder_layer = EncoderLayer(hidden_size, encoder_attn, encoder_ff, dropout=dropout_encoder)
-        encoder = Encoder(encoder_layer, nb_layers=nb_layers)
+        encoder_ff = PositionwiseFeedForward(hidden_size,
+                                             ff_hidden_size,
+                                             dropout=dropout_encoder)
+        encoder_layer = EncoderLayer(hidden_size,
+                                     encoder_attn,
+                                     encoder_ff,
+                                     dropout=dropout_encoder)
+        encoder = Encoder(encoder_layer,
+                          nb_layers=nb_layers)
 
-        decoder_emb = PositionalEmbedding(target_vocab_size, hidden_size, max_seq_len=max_seq_len, dropout=dropout_emb)
+        decoder_emb = PositionalEmbedding(target_vocab_size,
+                                          hidden_size,
+                                          max_seq_len=max_seq_len,
+                                          dropout=dropout_emb)
         decoder_scorer = DotProductScorer()
-        decoder_attn1 = MultiHeadedAttention(decoder_scorer, nb_heads, query_size, key_size, value_size, hidden_size,
+        decoder_attn1 = MultiHeadedAttention(decoder_scorer,
+                                             nb_heads,
+                                             query_size,
+                                             key_size,
+                                             value_size,
+                                             hidden_size,
                                              dropout=dropout_decoder)
-        decoder_attn2 = MultiHeadedAttention(decoder_scorer, nb_heads, query_size, key_size, value_size, hidden_size,
+        decoder_attn2 = MultiHeadedAttention(decoder_scorer,
+                                             nb_heads,
+                                             query_size,
+                                             key_size,
+                                             value_size,
+                                             hidden_size,
                                              dropout=dropout_decoder)
-        decoder_ff = PositionwiseFeedForward(hidden_size, ff_hidden_size, dropout=dropout_decoder)
-        decoder_layer = DecoderLayer(hidden_size, decoder_attn1, decoder_attn2, decoder_ff, dropout=dropout_decoder)
-        decoder = Decoder(decoder_layer, nb_layers=nb_layers)
+        decoder_ff = PositionwiseFeedForward(hidden_size,
+                                             ff_hidden_size,
+                                             dropout=dropout_decoder)
+        decoder_layer = DecoderLayer(hidden_size,
+                                     decoder_attn1,
+                                     decoder_attn2,
+                                     decoder_ff,
+                                     dropout=dropout_decoder)
+        decoder = Decoder(decoder_layer,
+                          nb_layers=nb_layers)
 
-        generator = Generator(hidden_size, target_vocab_size)
+        generator = Generator(hidden_size,
+                              target_vocab_size)
 
-        self.encdec = EncoderDecoder(encoder, decoder, encoder_emb, decoder_emb, generator)
+        self.encdec = EncoderDecoder(encoder,
+                                     decoder,
+                                     encoder_emb,
+                                     decoder_emb,
+                                     generator)
         self._init_params()
 
     def _init_params(self):

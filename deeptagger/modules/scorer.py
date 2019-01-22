@@ -46,7 +46,7 @@ class GeneralScorer(Scorer):
 
     def forward(self, query, keys):
         scale = self.scale(max(self.W.shape))
-        # score = torch.matmul(torch.matmul(query, self.W), keys.transpose(-1, -2))
+        # score = torch.matmul(torch.matmul(query, self.W), keys.transpose(-1, -2))  # NOQA
         score = torch.einsum('b...tm,mn,b...sn->b...ts', [query, self.W, keys])
         return score / scale
 
@@ -153,8 +153,10 @@ if __name__ == '__main__':
     out = OperationScorer(query_size, query_size, attn_size, op='add')(q, q)
     assert (list(out.shape) == [batch_size, q.shape[1], q.shape[1]])
 
-    out = MultiLayerScorer(query_size, keys_size, layer_sizes=[10, 5, 5], activation=nn.Sigmoid)(q, ks)
+    out = MultiLayerScorer(query_size, keys_size, layer_sizes=[10, 5, 5],
+                           activation=nn.Sigmoid)(q, ks)
     assert (list(out.shape) == [batch_size, q.shape[1], ks.shape[1]])
 
-    out = MultiLayerScorer(query_size, keys_size, layer_sizes=[10, 5, 5])(q, ks)
+    out = MultiLayerScorer(query_size, keys_size,
+                           layer_sizes=[10, 5, 5])(q, ks)
     assert (list(out.shape) == [batch_size, q.shape[1], ks.shape[1]])

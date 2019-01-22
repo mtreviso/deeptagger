@@ -2,11 +2,13 @@ import torch
 from torch import nn
 
 from deeptagger.modules.attention import Attention
-from deeptagger.modules.scorer import DotProductScorer, GeneralScorer, OperationScorer, MultiLayerScorer
+from deeptagger.modules.scorer import (DotProductScorer, GeneralScorer,
+                                       OperationScorer, MultiLayerScorer)
 
 
 class MultiHeadedAttention(nn.Module):
-    def __init__(self, scorer, nb_heads, query_size, key_size, value_size, hidden_size, dropout=0.1):
+    def __init__(self, scorer, nb_heads, query_size, key_size,
+                 value_size, hidden_size, dropout=0.1):
         super().__init__()
 
         # ensure hidden size is divisible by the nb of heads
@@ -32,11 +34,12 @@ class MultiHeadedAttention(nn.Module):
         values = self.proj_values(values)
 
         # split heads with their size
-        queries = queries.reshape(batch_size, -1, self.nb_heads, self.heads_size).transpose(1, 2)
-        keys = keys.reshape(batch_size, -1, self.nb_heads, self.heads_size).transpose(1, 2)
-        values = values.reshape(batch_size, -1, self.nb_heads, self.heads_size).transpose(1, 2)
+        queries = queries.reshape(batch_size, -1, self.nb_heads, self.heads_size).transpose(1, 2)  # NOQA
+        keys = keys.reshape(batch_size, -1, self.nb_heads, self.heads_size).transpose(1, 2)  # NOQA
+        values = values.reshape(batch_size, -1, self.nb_heads, self.heads_size).transpose(1, 2)  # NOQA
 
-        # if a mask is provided, expand dims for the head axis (see transpose above)
+        # if a mask is provided, expand dims for the head axis
+        # (see transpose above)
         if mask is not None:
             mask = mask.unsqueeze(1)
 
@@ -44,7 +47,7 @@ class MultiHeadedAttention(nn.Module):
         x, self.p_attn = self.attention(queries, keys, values, mask=mask)
 
         # concat heads with their size again
-        x = x.transpose(1, 2).reshape(batch_size, -1, self.nb_heads * self.heads_size)
+        x = x.transpose(1, 2).reshape(batch_size, -1, self.nb_heads * self.heads_size)  # NOQA
 
         # apply linear output
         o_attn = self.proj_output(x)
@@ -99,7 +102,8 @@ if __name__ == '__main__':
                                 dropout=0.1)
     out, probs = attn(qs, qs, qs)
     assert (list(out.shape) == [batch_size, qs.shape[1], hidden_size])
-    assert (list(probs.shape) == [batch_size, nb_heads, qs.shape[1], qs.shape[1]])
+    assert (list(probs.shape) == [batch_size, nb_heads,
+                                  qs.shape[1], qs.shape[1]])
 
     # multi headed self attention on source (encoder)
     scorer = DotProductScorer()
@@ -109,10 +113,11 @@ if __name__ == '__main__':
                                 dropout=0.1)
     out, probs = attn(kq, kq, kq)
     assert (list(out.shape) == [batch_size, kq.shape[1], hidden_size])
-    assert (list(probs.shape) == [batch_size, nb_heads, kq.shape[1], kq.shape[1]])
+    assert (list(probs.shape) == [batch_size, nb_heads,
+                                  kq.shape[1], kq.shape[1]])
 
     '''
-    Masked multi headed self attentions: 
+    Masked multi headed self attentions:
     '''
     # masked multi headed self attention on target (decoder)
     scorer = DotProductScorer()
@@ -122,7 +127,8 @@ if __name__ == '__main__':
                                 dropout=0.1)
     out, probs = attn(qs, qs, qs, mask=target_mask)
     assert (list(out.shape) == [batch_size, qs.shape[1], hidden_size])
-    assert (list(probs.shape) == [batch_size, nb_heads, qs.shape[1], qs.shape[1]])
+    assert (list(probs.shape) == [batch_size, nb_heads,
+                                  qs.shape[1], qs.shape[1]])
 
     # masked multi headed self attention on source (encoder)
     scorer = DotProductScorer()
@@ -132,9 +138,11 @@ if __name__ == '__main__':
                                 dropout=0.1)
     out, probs = attn(kq, kq, kq, mask=source_mask)
     assert (list(out.shape) == [batch_size, kq.shape[1], hidden_size])
-    assert (list(probs.shape) == [batch_size, nb_heads, kq.shape[1], kq.shape[1]])
+    assert (list(probs.shape) == [batch_size, nb_heads,
+                                  kq.shape[1], kq.shape[1]])
 
-    # masked multi headed self attention with different sentence lengths for source and target
+    # masked multi headed self attention with different sentence lengths for
+    # source and target
     scorer = DotProductScorer()
     attn = MultiHeadedAttention(scorer,
                                 nb_heads,
@@ -145,8 +153,8 @@ if __name__ == '__main__':
                                 dropout=0.1)
     out, probs = attn(qs, kq, kq, mask=source_mask.unsqueeze(-2))
     assert (list(out.shape) == [batch_size, qs.shape[1], hidden_size])
-    assert (list(probs.shape) == [batch_size, nb_heads, qs.shape[1], kq.shape[1]])
-
+    assert (list(probs.shape) == [batch_size, nb_heads,
+                                  qs.shape[1], kq.shape[1]])
 
     '''
     Multi headed with different attentions
@@ -162,7 +170,8 @@ if __name__ == '__main__':
                                 dropout=0.1)
     out, probs = attn(kq, ks, vs)
     assert (list(out.shape) == [batch_size, kq.shape[1], hidden_size])
-    assert (list(probs.shape) == [batch_size, nb_heads, kq.shape[1], kq.shape[1]])
+    assert (list(probs.shape) == [batch_size, nb_heads,
+                                  kq.shape[1], kq.shape[1]])
 
     # multi headed add attention on source (encoder)
     scorer = OperationScorer(hidden_size // nb_heads,
@@ -177,7 +186,8 @@ if __name__ == '__main__':
                                 dropout=0.1)
     out, probs = attn(kq, ks, vs)
     assert (list(out.shape) == [batch_size, kq.shape[1], hidden_size])
-    assert (list(probs.shape) == [batch_size, nb_heads, kq.shape[1], kq.shape[1]])
+    assert (list(probs.shape) == [batch_size, nb_heads,
+                                  kq.shape[1], kq.shape[1]])
 
     # multi headed concat attention on source (encoder)
     scorer = OperationScorer(hidden_size // nb_heads,
@@ -192,7 +202,8 @@ if __name__ == '__main__':
                                 dropout=0.1)
     out, probs = attn(kq, ks, vs)
     assert (list(out.shape) == [batch_size, kq.shape[1], hidden_size])
-    assert (list(probs.shape) == [batch_size, nb_heads, kq.shape[1], kq.shape[1]])
+    assert (list(probs.shape) == [batch_size, nb_heads,
+                                  kq.shape[1], kq.shape[1]])
 
     '''
     Masked multi headed with different attentions
@@ -208,7 +219,8 @@ if __name__ == '__main__':
                                 dropout=0.1)
     out, probs = attn(kq, ks, vs, mask=source_mask)
     assert (list(out.shape) == [batch_size, kq.shape[1], hidden_size])
-    assert (list(probs.shape) == [batch_size, nb_heads, kq.shape[1], kq.shape[1]])
+    assert (list(probs.shape) == [batch_size, nb_heads,
+                                  kq.shape[1], kq.shape[1]])
 
     # masked multi headed concat attention
     scorer = OperationScorer(hidden_size // nb_heads,
@@ -223,7 +235,8 @@ if __name__ == '__main__':
                                 dropout=0.1)
     out, probs = attn(kq, ks, vs, mask=source_mask)
     assert (list(out.shape) == [batch_size, kq.shape[1], hidden_size])
-    assert (list(probs.shape) == [batch_size, nb_heads, kq.shape[1], kq.shape[1]])
+    assert (list(probs.shape) == [batch_size, nb_heads,
+                                  kq.shape[1], kq.shape[1]])
 
     # masked multi headed concat attention
     scorer = MultiLayerScorer(hidden_size // nb_heads,
@@ -238,7 +251,8 @@ if __name__ == '__main__':
                                 dropout=0.1)
     out, probs = attn(kq, ks, vs, mask=source_mask)
     assert (list(out.shape) == [batch_size, kq.shape[1], hidden_size])
-    assert (list(probs.shape) == [batch_size, nb_heads, kq.shape[1], kq.shape[1]])
+    assert (list(probs.shape) == [batch_size, nb_heads,
+                                  kq.shape[1], kq.shape[1]])
 
     # masked multi headed general self attention
     scorer = GeneralScorer(hidden_size // nb_heads, hidden_size // nb_heads)
@@ -251,4 +265,5 @@ if __name__ == '__main__':
                                 dropout=0.1)
     out, probs = attn(kq, kq, kq, mask=source_mask)
     assert (list(out.shape) == [batch_size, kq.shape[1], hidden_size])
-    assert (list(probs.shape) == [batch_size, nb_heads, kq.shape[1], kq.shape[1]])
+    assert (list(probs.shape) == [batch_size, nb_heads,
+                                  kq.shape[1], kq.shape[1]])

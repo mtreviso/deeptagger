@@ -10,7 +10,8 @@ class PositionalEncoding(nn.Module):
         super().__init__()
 
         position = torch.arange(0.0, max_seq_len).unsqueeze(1)
-        div_term = torch.exp(torch.arange(0.0, size, 2) * -(np.log(10000.0) / size))
+        shift = -(np.log(10000.0) / size)
+        div_term = torch.exp(torch.arange(0.0, size, 2) * shift)
 
         self.pe = torch.zeros(max_seq_len, size, requires_grad=False)
         if torch.cuda.is_available():

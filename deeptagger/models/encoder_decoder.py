@@ -21,7 +21,8 @@ class EncoderDecoder(nn.Module):
 
     def forward(self, src, tgt, src_mask, tgt_mask):
         encoded_sequence = self.encode(src, src_mask)
-        decoded_sequence = self.decode(encoded_sequence, tgt, src_mask, tgt_mask)
+        decoded_sequence = self.decode(encoded_sequence, tgt,
+                                       src_mask, tgt_mask)
         return decoded_sequence
 
     def encode(self, src, src_mask):

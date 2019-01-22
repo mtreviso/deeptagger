@@ -2,7 +2,8 @@ from torch import nn
 
 
 class PositionwiseFeedForward(nn.Module):
-    """Implements FFN equation with a variable activation, residual and layer norm."""
+    """Implements FFN equation with a variable activation, residual and
+    layer norm."""
 
     def __init__(self, size, hidden_size, dropout=0.1, activation=nn.ReLU()):
         super().__init__()

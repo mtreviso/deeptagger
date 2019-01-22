@@ -16,8 +16,12 @@ class EncoderLayer(nn.Module):
 
     def forward(self, x, mask):
         "Follow Figure 1 (left) for connections."
-        apply_attn = lambda x: self.self_attn(x, x, x, mask)[0]  # get only the outputs - ignore the probs
-        x = self.input_sublayer(x, apply_attn)
+
+        def apply_self_attn(x):
+            # get only the outputs - ignore the probs (see attention.py)
+            return self.self_attn(x, x, x, mask)[0]
+
+        x = self.input_sublayer(x, apply_self_attn)
         return self.output_sublayer(x, lambda x: self.feed_forward(x))
 
 
@@ -36,7 +40,13 @@ class DecoderLayer(nn.Module):
 
     def forward(self, x, memory, src_mask, tgt_mask):
         "Follow Figure 1 (right) for connections."
-        m = memory
-        x = self.input_sublayer(x, lambda x: self.self_attn(x, x, x, tgt_mask)[0])
-        x = self.middle_sublayer(x, lambda x: self.src_attn(x, m, m, src_mask)[0])
+
+        def apply_self_attn(x):
+            return self.self_attn(x, x, x, tgt_mask)[0]
+
+        def apply_memory_attn(x):
+            return self.src_attn(x, memory, memory, src_mask)[0]
+
+        x = self.input_sublayer(x, apply_self_attn)
+        x = self.middle_sublayer(x, apply_memory_attn)
         return self.output_sublayer(x, lambda x: self.feed_forward(x))

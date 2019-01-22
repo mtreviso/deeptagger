@@ -3,13 +3,15 @@ from torch import nn
 from torch.nn import functional as F
 
 from deeptagger.models.utils import unsqueeze_as
-from deeptagger.modules.scorer import DotProductScorer, GeneralScorer, OperationScorer, MultiLayerScorer
+from deeptagger.modules.scorer import (DotProductScorer, GeneralScorer,
+                                       OperationScorer, MultiLayerScorer)
 
 
 class Attention(nn.Module):
     """Generic Attention Implementation.
-           Use query and keys to compute scores (energies), then apply softmax to scores and
-           combine the returned probs with `values` by calculating a dot product between them
+           Use query and keys to compute scores (energies), then apply
+           softmax to scores and combine the returned probs with `values`
+           by calculating a dot product between them
         """
 
     def __init__(self, scorer, dropout=0.0):
@@ -105,13 +107,16 @@ if __name__ == '__main__':
     assert (list(probs.shape) == [batch_size, qs.shape[1], ks.shape[1]])
 
     # decoder attend to encoder - concat attention
-    attn = Attention(OperationScorer(query_size, keys_size, attn_size, op='concat'), dropout=0.1)
+    attn = Attention(OperationScorer(query_size, keys_size, attn_size,
+                                     op='concat'), dropout=0.1)
     out, probs = attn(qs, ks, ks)
     assert (list(out.shape) == [batch_size, qs.shape[1], ks.shape[-1]])
     assert (list(probs.shape) == [batch_size, qs.shape[1], ks.shape[1]])
 
-    # decoder attend to encoder using a mlp with two hidden layers of 5 neurons each
-    attn = Attention(MultiLayerScorer(query_size, keys_size, layer_sizes=[5, 5]), dropout=0.1)
+    # decoder attend to encoder using a mlp with two hidden layers of
+    # 5 neurons each
+    attn = Attention(MultiLayerScorer(query_size, keys_size,
+                                      layer_sizes=[5, 5]), dropout=0.1)
     out, probs = attn(qs, ks, ks)
     assert (list(out.shape) == [batch_size, qs.shape[1], ks.shape[-1]])
     assert (list(probs.shape) == [batch_size, qs.shape[1], ks.shape[1]])
