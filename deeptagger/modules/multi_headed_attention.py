@@ -2,30 +2,65 @@ import torch
 from torch import nn
 
 from deeptagger.modules.attention import Attention
-from deeptagger.modules.scorer import (DotProductScorer, GeneralScorer,
-                                       OperationScorer, MultiLayerScorer)
 
 
 class MultiHeadedAttention(nn.Module):
-    def __init__(self, scorer, nb_heads, query_size, key_size,
-                 value_size, hidden_size, dropout=0.1):
+    """Implements the key-value scaled self-attetion with multiple heads:
+    https://arxiv.org/abs/1706.03762
+
+    Input tensors are projected into new tensors by a linear transformation.
+    We split each tensor by the number of heads. Then, attention is computed
+    individually for each head.
+
+    This implementation doesn't have a output projection as suggested by
+    The Annotated Transformer blog post.
+
+    Args:
+        score (Scorer): scorer function for attention.
+        nb_heads (int): number of heads to split the projected inputs
+        query_size (int): last dimension of the query tensor.
+        key_size (int): last dimension of the key tensor.
+        value_size (int): last dimension of the value tensor.
+        hidden_size (int): dimension of linear projection (must be divisible by `nb_heads`)
+        dropout (float): dropout rate after attention softmax (default: 0.1)
+    """
+    def __init__(self, scorer, nb_heads, query_size, key_size, value_size, hidden_size, dropout=0.1):
         super().__init__()
 
         # ensure hidden size is divisible by the nb of heads
         assert (hidden_size % nb_heads == 0)
-        self.heads_size = hidden_size // nb_heads
-        self.nb_heads = nb_heads
         self.hidden_size = hidden_size
+        self.nb_heads = nb_heads
+        self.heads_size = hidden_size // nb_heads
 
         self.proj_queries = nn.Linear(query_size, hidden_size)
         self.proj_keys = nn.Linear(key_size, hidden_size)
         self.proj_values = nn.Linear(value_size, hidden_size)
-        self.proj_output = nn.Linear(hidden_size, hidden_size)
 
         self.attention = Attention(scorer, dropout=dropout)
-        self.p_attn = None
+        self.p_attn = None  # useful if you'd like to see attention weights
 
     def forward(self, queries, keys, values, mask=None):
+        """Compute the attention between query, keys and values.
+
+        Args:
+            query (torch.Tensor): set of query vectors with shape of 
+                (batch_size, ..., target_len, hidden_size)
+            keys (torch.Tensor): set of keys vectors with shape of 
+                (batch_size, ..., source_len, hidden_size)
+            values (torch.Tensor, optional): set of values vectors with 
+                shape of: (batch_size, ..., source_len, hidden_size).
+                If None, keys are treated as values. Default: None
+            mask (torch.ByteTensor, optional): Tensor representing valid
+                positions. If None, all positions are considered valid.
+                Shape of (batch_size, target_len) 
+
+        Returns:
+            torch.Tensor: combination of values and attention probabilities.
+                Shape of (batch_size, ..., target_len, hidden_size)
+            torch.Tensor: attention probabilities between query and keys.
+                Shape of (batch_size, ..., target_len, source_len)
+        """
         batch_size, _, _ = queries.shape
 
         # do all the linear projections
@@ -35,10 +70,10 @@ class MultiHeadedAttention(nn.Module):
 
         # split heads with their size
         queries = queries.reshape(batch_size, -1, self.nb_heads, self.heads_size).transpose(1, 2)  # NOQA
-        keys = keys.reshape(batch_size, -1, self.nb_heads, self.heads_size).transpose(1, 2)  # NOQA
-        values = values.reshape(batch_size, -1, self.nb_heads, self.heads_size).transpose(1, 2)  # NOQA
+        keys = keys.reshape(batch_size, -1, self.nb_heads, self.heads_size).transpose(1, 2)    # NOQA
+        values = values.reshape(batch_size, -1, self.nb_heads, self.heads_size).transpose(1, 2)    # NOQA
 
-        # if a mask is provided, expand dims for the head axis
+        # if a mask is provided, expand dims for the head axis 
         # (see transpose above)
         if mask is not None:
             mask = mask.unsqueeze(1)
@@ -47,16 +82,15 @@ class MultiHeadedAttention(nn.Module):
         x, self.p_attn = self.attention(queries, keys, values, mask=mask)
 
         # concat heads with their size again
-        x = x.transpose(1, 2).reshape(batch_size, -1, self.nb_heads * self.heads_size)  # NOQA
-
-        # apply linear output
-        o_attn = self.proj_output(x)
+        o_attn = x.transpose(1, 2).reshape(batch_size, -1, self.nb_heads * self.heads_size)  # NOQA
 
         return o_attn, self.p_attn
 
 
 if __name__ == '__main__':
     from deeptagger.models.utils import sequence_mask
+    from deeptagger.modules.scorer import (DotProductScorer, GeneralScorer, 
+                                           OperationScorer, MLPScorer)
 
     torch.manual_seed(1)
     torch.cuda.manual_seed(1)
@@ -102,8 +136,7 @@ if __name__ == '__main__':
                                 dropout=0.1)
     out, probs = attn(qs, qs, qs)
     assert (list(out.shape) == [batch_size, qs.shape[1], hidden_size])
-    assert (list(probs.shape) == [batch_size, nb_heads,
-                                  qs.shape[1], qs.shape[1]])
+    assert (list(probs.shape) == [batch_size, nb_heads, qs.shape[1], qs.shape[1]])
 
     # multi headed self attention on source (encoder)
     scorer = DotProductScorer()
@@ -113,11 +146,10 @@ if __name__ == '__main__':
                                 dropout=0.1)
     out, probs = attn(kq, kq, kq)
     assert (list(out.shape) == [batch_size, kq.shape[1], hidden_size])
-    assert (list(probs.shape) == [batch_size, nb_heads,
-                                  kq.shape[1], kq.shape[1]])
+    assert (list(probs.shape) == [batch_size, nb_heads, kq.shape[1], kq.shape[1]])
 
     '''
-    Masked multi headed self attentions:
+    Masked multi headed self attentions: 
     '''
     # masked multi headed self attention on target (decoder)
     scorer = DotProductScorer()
@@ -127,8 +159,7 @@ if __name__ == '__main__':
                                 dropout=0.1)
     out, probs = attn(qs, qs, qs, mask=target_mask)
     assert (list(out.shape) == [batch_size, qs.shape[1], hidden_size])
-    assert (list(probs.shape) == [batch_size, nb_heads,
-                                  qs.shape[1], qs.shape[1]])
+    assert (list(probs.shape) == [batch_size, nb_heads, qs.shape[1], qs.shape[1]])
 
     # masked multi headed self attention on source (encoder)
     scorer = DotProductScorer()
@@ -138,11 +169,9 @@ if __name__ == '__main__':
                                 dropout=0.1)
     out, probs = attn(kq, kq, kq, mask=source_mask)
     assert (list(out.shape) == [batch_size, kq.shape[1], hidden_size])
-    assert (list(probs.shape) == [batch_size, nb_heads,
-                                  kq.shape[1], kq.shape[1]])
+    assert (list(probs.shape) == [batch_size, nb_heads, kq.shape[1], kq.shape[1]])
 
-    # masked multi headed self attention with different sentence lengths for
-    # source and target
+    # masked multi headed self attention with different sentence lengths for source and target
     scorer = DotProductScorer()
     attn = MultiHeadedAttention(scorer,
                                 nb_heads,
@@ -151,10 +180,10 @@ if __name__ == '__main__':
                                 query_size,
                                 hidden_size,
                                 dropout=0.1)
-    out, probs = attn(qs, kq, kq, mask=source_mask.unsqueeze(-2))
+    out, probs = attn(qs, kq, kq, mask=source_mask)
     assert (list(out.shape) == [batch_size, qs.shape[1], hidden_size])
-    assert (list(probs.shape) == [batch_size, nb_heads,
-                                  qs.shape[1], kq.shape[1]])
+    assert (list(probs.shape) == [batch_size, nb_heads, qs.shape[1], kq.shape[1]])
+
 
     '''
     Multi headed with different attentions
@@ -170,8 +199,7 @@ if __name__ == '__main__':
                                 dropout=0.1)
     out, probs = attn(kq, ks, vs)
     assert (list(out.shape) == [batch_size, kq.shape[1], hidden_size])
-    assert (list(probs.shape) == [batch_size, nb_heads,
-                                  kq.shape[1], kq.shape[1]])
+    assert (list(probs.shape) == [batch_size, nb_heads, kq.shape[1], kq.shape[1]])
 
     # multi headed add attention on source (encoder)
     scorer = OperationScorer(hidden_size // nb_heads,
@@ -186,8 +214,7 @@ if __name__ == '__main__':
                                 dropout=0.1)
     out, probs = attn(kq, ks, vs)
     assert (list(out.shape) == [batch_size, kq.shape[1], hidden_size])
-    assert (list(probs.shape) == [batch_size, nb_heads,
-                                  kq.shape[1], kq.shape[1]])
+    assert (list(probs.shape) == [batch_size, nb_heads, kq.shape[1], kq.shape[1]])
 
     # multi headed concat attention on source (encoder)
     scorer = OperationScorer(hidden_size // nb_heads,
@@ -202,8 +229,7 @@ if __name__ == '__main__':
                                 dropout=0.1)
     out, probs = attn(kq, ks, vs)
     assert (list(out.shape) == [batch_size, kq.shape[1], hidden_size])
-    assert (list(probs.shape) == [batch_size, nb_heads,
-                                  kq.shape[1], kq.shape[1]])
+    assert (list(probs.shape) == [batch_size, nb_heads, kq.shape[1], kq.shape[1]])
 
     '''
     Masked multi headed with different attentions
@@ -219,8 +245,7 @@ if __name__ == '__main__':
                                 dropout=0.1)
     out, probs = attn(kq, ks, vs, mask=source_mask)
     assert (list(out.shape) == [batch_size, kq.shape[1], hidden_size])
-    assert (list(probs.shape) == [batch_size, nb_heads,
-                                  kq.shape[1], kq.shape[1]])
+    assert (list(probs.shape) == [batch_size, nb_heads, kq.shape[1], kq.shape[1]])
 
     # masked multi headed concat attention
     scorer = OperationScorer(hidden_size // nb_heads,
@@ -235,11 +260,10 @@ if __name__ == '__main__':
                                 dropout=0.1)
     out, probs = attn(kq, ks, vs, mask=source_mask)
     assert (list(out.shape) == [batch_size, kq.shape[1], hidden_size])
-    assert (list(probs.shape) == [batch_size, nb_heads,
-                                  kq.shape[1], kq.shape[1]])
+    assert (list(probs.shape) == [batch_size, nb_heads, kq.shape[1], kq.shape[1]])
 
     # masked multi headed concat attention
-    scorer = MultiLayerScorer(hidden_size // nb_heads,
+    scorer = MLPScorer(hidden_size // nb_heads,
                               hidden_size // nb_heads,
                               layer_sizes=[5, 5])
     attn = MultiHeadedAttention(scorer,
@@ -251,8 +275,7 @@ if __name__ == '__main__':
                                 dropout=0.1)
     out, probs = attn(kq, ks, vs, mask=source_mask)
     assert (list(out.shape) == [batch_size, kq.shape[1], hidden_size])
-    assert (list(probs.shape) == [batch_size, nb_heads,
-                                  kq.shape[1], kq.shape[1]])
+    assert (list(probs.shape) == [batch_size, nb_heads, kq.shape[1], kq.shape[1]])
 
     # masked multi headed general self attention
     scorer = GeneralScorer(hidden_size // nb_heads, hidden_size // nb_heads)
@@ -265,5 +288,4 @@ if __name__ == '__main__':
                                 dropout=0.1)
     out, probs = attn(kq, kq, kq, mask=source_mask)
     assert (list(out.shape) == [batch_size, kq.shape[1], hidden_size])
-    assert (list(probs.shape) == [batch_size, nb_heads,
-                                  kq.shape[1], kq.shape[1]])
+    assert (list(probs.shape) == [batch_size, nb_heads, kq.shape[1], kq.shape[1]])

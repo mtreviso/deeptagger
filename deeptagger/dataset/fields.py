@@ -12,7 +12,7 @@ from deeptagger.dataset.vocabulary import Vocabulary
 
 def load_vectors(options):
     vectors = None
-    if options.embeddings_path is not None:
+    if options.embeddings_format is not None:
         logging.info('Loading {} word embeddings from: {}'.format(
             options.embeddings_format, options.embeddings_path))
         word_emb_cls = AvailableEmbeddings[options.embeddings_format]

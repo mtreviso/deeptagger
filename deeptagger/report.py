@@ -14,11 +14,11 @@ def get_line_bar(template_head):
 
 
 def report_head():
-    template_head = 'Loss   (val / epoch)* | '
-    template_head += 'Acc   (val / epoch)* | '
-    template_head += 'Acc oov train (val / epoch)* | '
-    template_head += 'Acc oov emb (val / epoch)* | '
-    template_head += 'Acc sent. (val / epoch)* |'
+    template_head = 'Loss    (val / epoch) | '
+    template_head += 'Acc    (val / epoch) | '
+    template_head += 'Acc oov train  (val / epoch) | '
+    template_head += 'Acc oov emb  (val / epoch) | '
+    template_head += 'Acc sent.  (val / epoch) |'
     template_line = get_line_bar(template_head)
     logging.info(template_head)
     logging.info(template_line)

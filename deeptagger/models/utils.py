@@ -6,6 +6,19 @@ from torch.nn.utils.rnn import pack_padded_sequence as pack
 from torch.nn.utils.rnn import pad_packed_sequence as unpack
 
 
+def indexes_to_words(indexes, itos):
+    """
+    Transofrm indexes to words using itos list
+    :param indexes: list of lists of ints
+    :param itos: list mapping integer to string
+    :return: list of lists of strs
+    """
+    words = []
+    for sample in indexes:
+        words.append([itos[i] for i in sample])
+    return words
+
+
 def unmask(tensor, mask):
     """
     Unmask a tensor and convert it back to a list of lists.
@@ -38,18 +51,33 @@ def clones(module, N):
 
 
 def subsequent_mask(size):
-    """Mask out subsequent positions."""
-    attn_shape = (1, size, size)
-    subsequent_mask = np.triu(np.ones(attn_shape), k=1).astype('uint8')
-    return torch.from_numpy(subsequent_mask) == 0
+    """Mask out subsequent positions.
+
+    Args:
+        size(int): squared tensor size
+    """
+    return torch.tril(torch.ones(size, size, dtype=torch.uint8))
 
 
 def sequence_mask(lengths, max_len=None):
-    """Creates a boolean mask from sequence lengths."""
+    """Creates a boolean mask from sequence lengths.
+
+    Args:
+        lengths (torch.LongTensor): lengths with shape (bs,)
+        max_len (int, optional): max sequence length.
+            if None it will be setted to lengths.max()
+    """
+
     if max_len is None:
         max_len = lengths.max()
     aranges = torch.arange(max_len).repeat(lengths.shape[0], 1)
     return aranges < lengths.unsqueeze(1)
+
+
+def unmask(tensor, mask):
+    """Unmask a tensor and convert it back to a list of lists."""
+    lengths = mask.int().sum(dim=-1).tolist()
+    return [x[:lengths[i]].tolist() for i, x in enumerate(tensor)]
 
 
 def unsqueeze_as(tensor, as_tensor, dim=-1):
@@ -60,28 +88,30 @@ def unsqueeze_as(tensor, as_tensor, dim=-1):
     return x
 
 
-def unsqueeze_to_ndim(tensor, ndim, dim=1):
-    """Expand `ndim` new dimensions along `dim` axis."""
-    x = tensor
-    while x.dim() < ndim:
-        x = tensor.unsqueeze(dim)
-    return x
-
-
 def make_mergeable_tensors(t1, t2):
-    """Expand a new dimension in t1 and t2 such that both have the same timesteps:
-        t1.shape = [bs, n, d1] and t2.shape = [bs, m, d2]
-        x1.shape = [bs, n, 1, d1] and x2.shape = [bs, 1, m, d2]
-        x1.shape = [bs, n, m, d1] and x2.shape = [bs, n, m, d2]
+    """Expand a new dimension in t1 and t2 and expand them so that both
+    tensors will have the same number of timesteps.
+
+    Args:
+        t1 (torch.Tensor): tensor with shape (bs, ..., m, d1)
+        t2 (torch.Tensor): tensor with shape (bs, ..., n, d2)
+
+    Returns:
+        torch.Tensor: (bs, ..., m, n, d1)
+        torch.Tensor: (bs, ..., m, n, d2)
     """
-    x1 = unsqueeze_to_ndim(t1, 4, 1) if t1.dim() > 4 else t1
-    x2 = unsqueeze_to_ndim(t2, 4, 1) if t2.dim() > 4 else t2
-    new_shape = [-1] * (x1.dim() + 1)
-    new_shape[-2] = x1.shape[-2]
-    new_shape[-3] = x2.shape[-2]
-    x1 = x1.unsqueeze(-2).transpose(-2, -3).expand(new_shape)
-    x2 = x2.unsqueeze(-2).expand(new_shape)
-    return x1, x2
+    assert t1.dim() == t2.dim()
+    assert t1.dim() >= 3
+    assert t1.shape[:-2] == t2.shape[:-2]
+    # new_shape = [-1, ..., m, n, -1]
+    new_shape = [-1 for _ in range(t1.dim() + 1)]
+    new_shape[-3] = t1.shape[-2]  # m
+    new_shape[-2] = t2.shape[-2]  # n
+    # (bs, ..., m, d1) -> (bs, ..., m, 1, d1) -> (bs, ..., m, n, d1)
+    new_t1 = t1.unsqueeze(-2).expand(new_shape)
+    # (bs, ..., n, d2) -> (bs, ..., 1, n, d2) -> (bs, ..., m, n, d2)
+    new_t2 = t2.unsqueeze(-3).expand(new_shape)
+    return new_t1, new_t2
 
 
 def apply_packed_sequence(rnn, embedding, lengths):
@@ -107,16 +137,3 @@ def apply_packed_sequence(rnn, embedding, lengths):
     _, permutation_rev = torch.sort(permutation, descending=False)
     outputs = outputs_sorted[permutation_rev]
     return outputs
-
-
-def indexes_to_words(indexes, itos):
-    """
-    Transofrm indexes to words using itos list
-    :param indexes: list of lists of ints
-    :param itos: list mapping integer to string
-    :return: list of lists of strs
-    """
-    words = []
-    for sample in indexes:
-        words.append([itos[i] for i in sample])
-    return words

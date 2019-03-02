@@ -101,7 +101,7 @@ class Vocabulary(Vocab):
         self.orig_stoi = defaultdict(_default_unk_index)
         self.orig_stoi.update({tok: i for i, tok in enumerate(self.itos)})
 
-        if add_vectors_vocab:
+        if add_vectors_vocab and vectors is not None:
             if max_size is not None and \
                 sum(v.stoi for v in vectors) + \
                     len(self.itos) > max_size:

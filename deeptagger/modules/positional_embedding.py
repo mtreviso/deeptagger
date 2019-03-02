@@ -4,14 +4,20 @@ from deeptagger.modules.positional_encoding import PositionalEncoding
 
 
 class PositionalEmbedding(nn.Module):
-    """An embedding layer followed by positional encoding."""
+    """Implements an Embedding Layer with absolute Positional Encoding.
 
-    def __init__(self, vocab_size, embedding_size, max_seq_len=1000,
-                 dropout=0.0, scale=True):
+    Args:
+        vocab_size (int): vocabulary size
+        size (int): embeddings size
+        max_seq_len (int): hypotethical maximum sequence length 
+        dropout (float): dropout rate after applying PE (default: 0.)
+        scale (bool): scale embeddings weights by sqrt(size) before PE
+    """
+
+    def __init__(self, vocab_size, size, max_seq_len=1000, dropout=0.0, scale=True):
         super().__init__()
-        self.emb = nn.Embedding(vocab_size, embedding_size)
-        self.pe = PositionalEncoding(max_seq_len, embedding_size,
-                                     dropout=dropout, scale=scale)
+        self.emb = nn.Embedding(vocab_size, size)
+        self.pe = PositionalEncoding(max_seq_len, size, dropout=dropout, scale=scale)
 
     def forward(self, x):
         x = self.emb(x)

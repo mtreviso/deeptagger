@@ -13,7 +13,7 @@ available_models = {
     'simple_lstm': SimpleLSTM,
     'rcnn': RCNN,
     'cnn': CNN,
-    'rnn': RNN
+    'rnn': RNN,
 }
 
 

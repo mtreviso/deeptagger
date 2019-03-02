@@ -1,33 +1,42 @@
-import numpy as np
+import math
 import torch
 from torch import nn
 
 
 class PositionalEncoding(nn.Module):
-    """Implements the PE function."""
+    """Implements the absolute Positional Encoding mechanism.
 
-    def __init__(self, max_seq_len, size, dropout=0.0, scale=True):
+    Args:
+        max_seq_len (int): hypotethical maximum sequence length (usually 1000)
+        hidden_size (int): embeddings size
+        dropout (float): dropout rate after applying PE (default: 0.)
+        scale (bool): scale embeddings weights by sqrt(hidden_size) before PE
+    """
+
+    def __init__(self, max_seq_len, hidden_size, dropout=0.0, scale=True):
         super().__init__()
 
         position = torch.arange(0.0, max_seq_len).unsqueeze(1)
-        shift = -(np.log(10000.0) / size)
-        div_term = torch.exp(torch.arange(0.0, size, 2) * shift)
+        neg_log_term = - math.log(10000.0) / hidden_size
+        div_term = torch.exp(torch.arange(0.0, hidden_size, 2) * neg_log_term)
 
-        self.pe = torch.zeros(max_seq_len, size, requires_grad=False)
+        self.pe = torch.zeros(max_seq_len, hidden_size, requires_grad=False)
+        
+        # TODO: fix this (problematic if we're working with multiple gpus)
         if torch.cuda.is_available():
-            self.pe = self.pe.cuda()
+            self.pe = self.pe.cuda() 
+
         self.pe[:, 0::2] = torch.sin(position * div_term)
         self.pe[:, 1::2] = torch.cos(position * div_term)
         self.pe = self.pe.unsqueeze(0)  # add batch dimension
         self.dropout = nn.Dropout(dropout)
         self.scale = scale
-        self.size = size
+        self.hidden_size = hidden_size
 
     def forward(self, emb):
         assert (emb.shape[1] <= self.pe.shape[1])
         if self.scale:
-            # multiplying weights according to the transformer
-            emb = emb * np.sqrt(self.size)
+            emb = emb * math.sqrt(self.hidden_size)
         emb = emb + self.pe[:, :emb.shape[1]]
         emb = self.dropout(emb)
         return emb
@@ -35,6 +44,7 @@ class PositionalEncoding(nn.Module):
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
+    import numpy as np
 
     batch_size = 8
     vocab_size = 1000
