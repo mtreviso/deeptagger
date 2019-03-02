@@ -9,10 +9,12 @@ class HandCrafted(nn.Module):
     """Receives the input and calculate handcrafted features like prefixes,
     suffixes and capitalization."""
 
-    def __init__(self,
-                 prefixes_field=None,
-                 suffixes_field=None,
-                 caps_field=None):
+    def __init__(
+        self,
+        prefixes_field=None,
+        suffixes_field=None,
+        caps_field=None
+    ):
         super().__init__()
         # layers
         self.prefixes_field = prefixes_field
@@ -33,29 +35,34 @@ class HandCrafted(nn.Module):
             self.prefixes_emb = nn.Embedding(
                 num_embeddings=len(self.prefixes_field.vocab),
                 embedding_dim=options.prefix_embeddings_size,
-                padding_idx=constants.PAD_ID
+                padding_idx=constants.PAD_ID,
             )
-            self.prefix_length = (options.prefix_max_length -
-                                  options.prefix_min_length + 1)
-            self.features_size += (self.prefix_length *
-                                   options.prefix_embeddings_size)
+            self.prefix_length = (
+                options.prefix_max_length - options.prefix_min_length + 1
+            )
+            self.features_size += (
+                self.prefix_length * options.prefix_embeddings_size
+            )
 
         if self.suffixes_field is not None:
             self.suffixes_emb = nn.Embedding(
                 num_embeddings=len(self.suffixes_field.vocab),
                 embedding_dim=options.suffix_embeddings_size,
-                padding_idx=constants.PAD_ID
+                padding_idx=constants.PAD_ID,
             )
-            self.suffix_length = (options.suffix_max_length -
-                                  options.suffix_min_length + 1)
-            self.features_size += (self.suffix_length *
-                                   options.suffix_embeddings_size)
+            self.suffix_length = (
+                options.suffix_max_length - options.suffix_min_length + 1
+            )
+            self.features_size += (
+                self.suffix_length * options.suffix_embeddings_size
+            )
 
         if self.caps_field is not None:
             self.caps_emb = nn.Embedding(
                 num_embeddings=len(self.caps_field.vocab),
                 embedding_dim=options.caps_embeddings_size,
-                padding_idx=constants.PAD_ID)
+                padding_idx=constants.PAD_ID,
+            )
             self.caps_length = 1
             self.features_size += options.caps_embeddings_size
 

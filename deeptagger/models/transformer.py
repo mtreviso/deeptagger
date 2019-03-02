@@ -1,3 +1,5 @@
+# flake8: noqa: E501
+
 from torch import nn
 from torch.nn import functional as F
 
@@ -10,7 +12,7 @@ from deeptagger.models.utils import clones
 
 
 class TransformerAttention(nn.Module):
-    """ Simple wrapper to append projection, dropout and layer norm 
+    """ Simple wrapper to append projection, dropout and layer norm
     to the MultiHeadedAttention module."""
 
     def __init__(self, attn, dropout=0.0):
@@ -33,7 +35,7 @@ class TransformerAttention(nn.Module):
 
 
 class TransformerFFN(nn.Module):
-    """ Simple wrapper to append dropout and layer norm 
+    """ Simple wrapper to append dropout and layer norm
     to the PositionwiseFFN module."""
 
     def __init__(self, position_ffn, dropout=0.0):
@@ -88,7 +90,7 @@ class DecoderLayer(nn.Module):
 
     Args:
         self_attn (nn.Module): attention mechanism object for self attention
-        source_attn (nn.Module): attention mechanism object for attention 
+        source_attn (nn.Module): attention mechanism object for attention
             over source outputs
         position_ffn (nn.Module): position-wise ffn object
         dropout (float): dropout rate (default: 0.)
@@ -181,8 +183,8 @@ class Transformer(nn.Module):
         )
         encoder_ff = PositionwiseFeedForward(hidden_size, ff_hidden_size)
         encoder_layer = EncoderLayer(
-            encoder_attn, 
-            encoder_ff, 
+            encoder_attn,
+            encoder_ff,
             dropout=dropout_encoder
         )
 
@@ -231,7 +233,7 @@ class Transformer(nn.Module):
         self.decoder = TransformerDecoder(decoder_layer, nb_layers=nb_layers)
         self.generator = TransformerGenerator(hidden_size, target_vocab_size)
 
-        self._init_params() 
+        self._init_params()
 
     def _init_params(self):
         for p in self.parameters():
@@ -257,6 +259,10 @@ class Transformer(nn.Module):
         return self.generator(x)
 
 
+class SequentialTransformerEncoder(Transformer):
+    pass
+
+
 if __name__ == '__main__':
 
     import torch
@@ -270,13 +276,12 @@ if __name__ == '__main__':
     target_len = 5
     source_vocab_size = 10
     target_vocab_size = 5
-    
 
     source = torch.randint(0, source_vocab_size, size=(batch_size, source_len)).long()
     target = torch.randint(0, target_vocab_size, size=(batch_size, target_len)).long()
 
     source_mask = sequence_mask(torch.LongTensor([5, 3, 7, 4, 5, 4, 3, 6]))
-    
+
     target_mask_pad = sequence_mask(torch.LongTensor([5, 1, 2, 4, 3, 5, 5, 2]))
     target_mask_valid = subsequent_mask(target_len)
 
@@ -286,10 +291,10 @@ if __name__ == '__main__':
     target_mask = target_mask_pad.unsqueeze(-2) & target_mask_valid.unsqueeze(0)
 
     print(source_mask.shape, target_mask.shape)
-    print(source_mask[1]) 
+    print(source_mask[1])
     print(target_mask[2])
 
-    model = Transformer(source_vocab_size, 
+    model = Transformer(source_vocab_size,
                         target_vocab_size,
                         hidden_size = 20,
                         nb_layers = 1,
@@ -305,7 +310,7 @@ if __name__ == '__main__':
 
         memory = model.encode(source, source_mask)
         print(memory.shape, memory.sum(), memory.mean(), memory.min(), memory.max())
-        
+
         pred = model.decode(target, target_mask, memory, source_mask)
         print(pred.shape, pred.sum(), pred.mean(), pred.min(), pred.max())
 
@@ -317,5 +322,3 @@ if __name__ == '__main__':
 
         pred = model.generator(pred)
         print(pred.shape, pred.sum(), pred.mean(), pred.min(), pred.max())
-
-

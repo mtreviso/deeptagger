@@ -8,5 +8,5 @@ def gelu(x):
 
 
 def swish(x):
-	"""swusg activation function copied from pytorch-pretrained-BERT."""
-	return x * torch.sigmoid(x)
+    """swusg activation function copied from pytorch-pretrained-BERT."""
+    return x * torch.sigmoid(x)

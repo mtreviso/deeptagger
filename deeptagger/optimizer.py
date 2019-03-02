@@ -1,9 +1,11 @@
 from pathlib import Path
 
 import torch
+import adabound
 
 from deeptagger import constants
 from deeptagger import opts
+from deeptagger.modules.optim import AdamW
 
 
 available_optimizers = {
@@ -14,7 +16,9 @@ available_optimizers = {
     'sparseadam': torch.optim.SparseAdam,
     'sgd': torch.optim.SGD,
     'asgd': torch.optim.ASGD,
-    'rmsprop': torch.optim.RMSprop
+    'rmsprop': torch.optim.RMSprop,
+    'adabound': adabound.AdaBound,
+    'adamw': AdamW,
 }
 
 

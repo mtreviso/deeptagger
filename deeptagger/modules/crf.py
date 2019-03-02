@@ -1,3 +1,5 @@
+# flake8: noqa: E501
+
 import torch
 from torch import nn
 

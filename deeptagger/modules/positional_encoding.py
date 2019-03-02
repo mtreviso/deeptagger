@@ -17,14 +17,14 @@ class PositionalEncoding(nn.Module):
         super().__init__()
 
         position = torch.arange(0.0, max_seq_len).unsqueeze(1)
-        neg_log_term = - math.log(10000.0) / hidden_size
+        neg_log_term = -math.log(10000.0) / hidden_size
         div_term = torch.exp(torch.arange(0.0, hidden_size, 2) * neg_log_term)
 
         self.pe = torch.zeros(max_seq_len, hidden_size, requires_grad=False)
-        
+
         # TODO: fix this (problematic if we're working with multiple gpus)
         if torch.cuda.is_available():
-            self.pe = self.pe.cuda() 
+            self.pe = self.pe.cuda()
 
         self.pe[:, 0::2] = torch.sin(position * div_term)
         self.pe[:, 1::2] = torch.cos(position * div_term)
@@ -34,15 +34,15 @@ class PositionalEncoding(nn.Module):
         self.hidden_size = hidden_size
 
     def forward(self, emb):
-        assert (emb.shape[1] <= self.pe.shape[1])
+        assert emb.shape[1] <= self.pe.shape[1]
         if self.scale:
             emb = emb * math.sqrt(self.hidden_size)
-        emb = emb + self.pe[:, :emb.shape[1]]
+        emb = emb + self.pe[:, : emb.shape[1]]
         emb = self.dropout(emb)
         return emb
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from matplotlib import pyplot as plt
     import numpy as np
 
@@ -66,19 +66,19 @@ if __name__ == '__main__':
     x_zero = pe(x_zero)
 
     plt.figure(figsize=(15, 5))
-    plt.title('Random input')
+    plt.title("Random input")
     plt.plot(np.arange(seq_len), x_rand[0, :, d_i:d_j].numpy())
-    plt.legend(['dim %d' % d for d in range(d_i, d_j)])
+    plt.legend(["dim %d" % d for d in range(d_i, d_j)])
     plt.show()
 
     plt.figure(figsize=(15, 5))
-    plt.title('Embedding input')
+    plt.title("Embedding input")
     plt.plot(np.arange(seq_len), x_emb[0, :, d_i:d_j].numpy())
-    plt.legend(['dim %d' % d for d in range(d_i, d_j)])
+    plt.legend(["dim %d" % d for d in range(d_i, d_j)])
     plt.show()
 
     plt.figure(figsize=(15, 5))
-    plt.title('Zero input')
+    plt.title("Zero input")
     plt.plot(np.arange(seq_len), x_zero[0, :, d_i:d_j].numpy())
-    plt.legend(['dim %d' % d for d in range(d_i, d_j)])
+    plt.legend(["dim %d" % d for d in range(d_i, d_j)])
     plt.show()

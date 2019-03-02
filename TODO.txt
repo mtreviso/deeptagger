@@ -1,17 +1,18 @@
 Criar modelos mais complexos:
-	+ CRF
-	+ Attention
-	Transformer
+	+ CRF (só empilhar nos já existentes)
+	+ Attention (só empilhar nos já existentes)
+	Transformer (só empilhar nos já existentes)
 
 Adicionar regularização:
-	Dropout depois de quais camadas?
-	BatchNormalization?
-	l1 l2?
+	Dropout depois de quais camadas? (ablation)
+	l1 l2? (ablation)
+	BatchNormalization?  (não faz muito sentido pra PLN)
 
-Testar com embeddings do carioca
-Testar com diferentes word embeddings
-Adicionar viterbi decoder
-Adicionar word embeddings do ELMO
+Testar com embeddings do carioca (ablation)
+Testar com diferentes word embeddings (ablation)
+Adicionar viterbi decoder (só colocar)
+
+Next steps:
 Adicionar BPE vocab
-
+Adicionar word embeddings do ELMO
 Scripts para plotar loss/acc em relacao as epocas

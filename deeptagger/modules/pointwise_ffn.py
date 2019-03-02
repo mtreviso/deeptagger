@@ -9,7 +9,14 @@ class PositionwiseFeedForward(nn.Module):
         inner_hidden_size (int): hidden ffn dimension
         activation_fn (function): nonlinearity function (default: relu)
     """
-    def __init__(self, hidden_size, inner_hidden_size, dropout=0.1, activation_fn=nn.functional.relu):
+
+    def __init__(
+        self,
+        hidden_size,
+        inner_hidden_size,
+        dropout=0.1,
+        activation_fn=nn.functional.relu,
+    ):
         super().__init__()
         self.hidden_size = hidden_size
         self.activation_fn = activation_fn

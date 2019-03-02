@@ -74,12 +74,6 @@ def sequence_mask(lengths, max_len=None):
     return aranges < lengths.unsqueeze(1)
 
 
-def unmask(tensor, mask):
-    """Unmask a tensor and convert it back to a list of lists."""
-    lengths = mask.int().sum(dim=-1).tolist()
-    return [x[:lengths[i]].tolist() for i, x in enumerate(tensor)]
-
-
 def unsqueeze_as(tensor, as_tensor, dim=-1):
     """Expand new dimensions based on a template tensor along `dim` axis."""
     x = tensor
