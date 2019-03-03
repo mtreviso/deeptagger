@@ -6,6 +6,7 @@ from deeptagger import features
 from deeptagger import iterator
 from deeptagger import models
 from deeptagger import optimizer
+from deeptagger import scheduler
 from deeptagger import opts
 from deeptagger.trainer import Trainer
 
@@ -55,6 +56,8 @@ def run(options):
         model = models.load(options.load, fields_tuples)
         logging.info('Loading optimizer...')
         optim = optimizer.load(options.load, model.parameters())
+        logging.info('Loading scheduler...')
+        scheduler_optim = scheduler.load(options.load, optim)
     else:
         logging.info('Building vocabulary...')
         fields.build_vocabs(fields_tuples, train_dataset, datasets, options)
@@ -64,12 +67,15 @@ def run(options):
         model = models.build(options, fields_tuples)
         logging.info('Building optimizer...')
         optim = optimizer.build(options, model.parameters())
+        logging.info('Wrapping optimizer inside a scheduler...')
+        scheduler_optim = scheduler.build(options, optim)
 
     logging.info('Building trainer...')
     trainer = Trainer(
         train_iter,
         model,
         optim,
+        scheduler_optim,
         options,
         dev_iter=dev_iter,
         test_iter=test_iter)
@@ -92,5 +98,7 @@ def run(options):
         models.save(config_path, model)
         logging.info('Saving optimizer...')
         optimizer.save(config_path, optim)
+        logging.info('Saving scheduler...')
+        scheduler.save(config_path, scheduler_optim)
 
-    return options, fields_tuples, model, optim
+    return options, fields_tuples, model, scheduler_optim

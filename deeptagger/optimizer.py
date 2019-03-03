@@ -5,8 +5,11 @@ import adabound
 
 from deeptagger import constants
 from deeptagger import opts
-from deeptagger.modules.optim import AdamW
-
+from deeptagger.modules.optim.adamw import AdamW
+from deeptagger.modules.optim.step_decay_optimizer import StepDecayOptimizer
+from deeptagger.modules.optim.lr_scheduler import (NoamDecayScheduler,
+                                                   ExpDecayScheduler,
+                                                   RsqrtDecayScheduler)
 
 available_optimizers = {
     'adam': torch.optim.Adam,
@@ -20,6 +23,31 @@ available_optimizers = {
     'adabound': adabound.AdaBound,
     'adamw': AdamW,
 }
+
+available_step_decays = {
+    'noam': NoamDecayScheduler,
+    'exp': ExpDecayScheduler,
+    'rsqrt': RsqrtDecayScheduler
+}
+
+
+def build_step_decay_wrapper(options, optim):
+    kwargs = {}
+    lr_step_decay_class = available_step_decays[options.lr_step_decay]
+
+    if options.learning_rate is not None:
+        kwargs['warmup_steps'] = options.warmup_steps
+    if options.learning_rate is not None:
+        kwargs['decay_steps'] = options.decay_steps
+    if options.lr_step_decay == 'noam':
+        kwargs['model_size'] = max(options.hidden_sizes)
+    elif options.lr_step_decay == 'exp':
+        kwargs['initial_lr'] = options.learning_rate
+
+    lr_step_decay = lr_step_decay_class(**kwargs)
+    lr = options.learning_rate
+    wrapped_optim = StepDecayOptimizer(optim, lr, lr_step_decay)
+    return wrapped_optim
 
 
 def build(options, model_parameters):
@@ -48,7 +76,12 @@ def build(options, model_parameters):
         kwargs['lr'] = 0.1
 
     parameters = filter(lambda p: p.requires_grad, model_parameters)
-    return optim_class(parameters, **kwargs)
+    optim = optim_class(parameters, **kwargs)
+
+    if options.lr_step_decay is not None:
+        # TODO: fix this! currently, we can't pass a wrapper to a LRScheduler
+        return build_step_decay_wrapper(options, optim)
+    return optim
 
 
 def load_state(path, optim):

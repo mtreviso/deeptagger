@@ -1,49 +1,7 @@
-import math
+# from torch.optim import Optimizer
 
 
-class StepOptimizerLRScheduler:
-    def __call__(self, step):
-        raise NotImplementedError
-
-
-class NoamDecayScheduler(StepOptimizerLRScheduler):
-    """Implements learning rate decay from AIAYN paper."""
-
-    def __init__(self, warmup_steps, model_size):
-        self.warmup_steps = warmup_steps
-        self.model_size = model_size
-
-    def __call__(self, step):
-        sqrt_model_size = math.pow(self.model_size, -0.5)
-        sqrt_warmup_steps = math.pow(self.warmup_steps, -1.5)
-        sqrt_step = math.pow(step, -0.5)
-        return sqrt_model_size * min(sqrt_step, step * sqrt_warmup_steps)
-
-
-class ExpDecayScheduler(StepOptimizerLRScheduler):
-    """Adapted from opennmt-py"""
-
-    def __init__(self, initial_lr, decay_steps, start_step=0):
-        self.initial_lr = initial_lr
-        self.decay_steps = decay_steps
-        self.start_step = start_step
-
-    def __call__(self, step):
-        valid_steps = max(0, step - self.start_step + self.decay_steps)
-        return math.pow(self.initial_lr, valid_steps // self.decay_steps)
-
-
-class RsqrtDecayScheduler(StepOptimizerLRScheduler):
-    """Adapted from opennmt-py"""
-
-    def __init__(self, warmup_steps):
-        self.warmup_steps = warmup_steps
-
-    def __call__(self, step):
-        return 1.0 / math.sqrt(max(step, self.warmup_steps))
-
-
-class StepOptimizerWrapper:
+class StepDecayOptimizer:
     """Simple wrapper that implements learning rate decay during
     optimization steps.
 
@@ -84,6 +42,9 @@ class StepOptimizerWrapper:
 
 if __name__ == '__main__':
 
+    from deeptagger.modules.optim.lr_scheduler import (NoamDecayScheduler,
+                                                       RsqrtDecayScheduler,
+                                                       ExpDecayScheduler)
     import numpy as np
     from matplotlib import pyplot as plt
 
@@ -91,14 +52,14 @@ if __name__ == '__main__':
     # model = MyModel()
     # opt = torch.optim.Adam(model.parameters(), betas=(0.9, 0.98), eps=1e-9)
     # noam_scheduler = NoamDecayScheduler(4000, model_hidden_size)
-    # step_optim = StepOptimizerWrapper(opt, lr=2.0, noam_scheduler)
+    # step_optim = StepDecayOptimizer(opt, lr=2.0, noam_scheduler)
 
     lr = 1.0
-    opts = [StepOptimizerWrapper(None, lr, NoamDecayScheduler(4000, 512)),
-            StepOptimizerWrapper(None, lr, NoamDecayScheduler(8000, 512)),
-            StepOptimizerWrapper(None, lr, NoamDecayScheduler(4000, 256)),
-            StepOptimizerWrapper(None, lr, RsqrtDecayScheduler(1000)),
-            StepOptimizerWrapper(None, lr, ExpDecayScheduler(0.1, 8000))
+    opts = [StepDecayOptimizer(None, lr, NoamDecayScheduler(4000, 512)),
+            StepDecayOptimizer(None, lr, NoamDecayScheduler(8000, 512)),
+            StepDecayOptimizer(None, lr, NoamDecayScheduler(4000, 256)),
+            StepDecayOptimizer(None, lr, RsqrtDecayScheduler(1000)),
+            StepDecayOptimizer(None, lr, ExpDecayScheduler(0.1, 8000))
             ]
 
     epoch_steps = 20000  # nb of steps for one epoch

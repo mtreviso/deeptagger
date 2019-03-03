@@ -7,6 +7,7 @@ import torch
 from deeptagger import constants
 from deeptagger import models
 from deeptagger import optimizer
+from deeptagger import scheduler
 from deeptagger.models.utils import indexes_to_words
 from deeptagger.report import report_progress, report_stats, report_stats_final
 from deeptagger.stats import Stats
@@ -19,6 +20,7 @@ class Trainer:
         train_iter,
         model,
         optimizer,
+        scheduler_optim,
         options,
         dev_iter=None,
         test_iter=None
@@ -28,6 +30,7 @@ class Trainer:
         self.dev_iter = dev_iter
         self.test_iter = test_iter
         self.optimizer = optimizer
+        self.scheduler_optim = scheduler_optim
         self.epochs = options.epochs
         self.output_dir = options.output_dir
         self.dev_checkpoint_epochs = options.dev_checkpoint_epochs
@@ -120,6 +123,7 @@ class Trainer:
         self.train_stats.reset()
         indexes = []
         for i, batch in enumerate(self.train_iter, start=1):
+            self.scheduler_optim.step()
             self.model.zero_grad()
             pred = self.model(batch)
             loss = self.model.loss(pred, batch.tags)
@@ -166,11 +170,13 @@ class Trainer:
         logging.info('Saving training state to {}'.format(output_path))
         models.save(output_path, self.model)
         optimizer.save(output_path, self.optimizer)
+        scheduler.save(output_path, self.scheduler_optim)
 
     def load(self, directory):
         logging.info('Loading training state from {}'.format(directory))
         models.load_state(directory, self.model)
         optimizer.load_state(directory, self.optimizer)
+        scheduler.load_state(directory, self.scheduler_optim)
 
     def restore_epoch(self, epoch):
         epoch_dir = 'epoch_{}'.format(epoch)

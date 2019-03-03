@@ -5,6 +5,7 @@ from pathlib import Path
 from deeptagger import constants
 from deeptagger import models
 from deeptagger import optimizer
+from deeptagger import scheduler
 
 
 def load(path):
@@ -341,6 +342,45 @@ def train_opts(parser):
                        default=None,
                        help='Smoothing constant. Used only for: rmsprop. '
                             'Let unseted to use default values.')
+    # optimizer with learning rate decay during training steps
+    group.add_argument('--lr-step-decay',
+                       default=None,
+                       choices=list(optimizer.available_step_decays.keys()),
+                       help='Method used for learning rate decay during '
+                            'training iterations.')
+    group.add_argument('--warmup-steps',
+                       type=int,
+                       default=None,
+                       help='LR will increase until this number of steps.')
+    group.add_argument('--decay-steps',
+                       type=int,
+                       default=None,
+                       help='Scale LR every `decay-steps` steps')
+
+    # LRScheduler options
+    group = parser.add_argument_group('training-learning-rate-scheduler')
+    group.add_argument('--scheduler',
+                       default=None,
+                       choices=list(scheduler.available_schedulers.keys()),
+                       help='Learning rate scheduler method.')
+    group.add_argument('--step-size',
+                       type=int,
+                       default=None,
+                       help='Period of learning rate decay.')
+    group.add_argument('--gamma',
+                       type=float,
+                       default=0.1,
+                       help='Multiplicative factor of learning rate decay.')
+    group.add_argument('--eta-min',
+                       type=float,
+                       default=1e-7,
+                       help='Minimum learning rate.')
+    group.add_argument('--t-max',
+                       type=float,
+                       default=None,
+                       help='Maximum number of iterations. If None and cosine '
+                            'annealing is selected, it will be set to the '
+                            'size of the dataset.')
 
 
 def predict_opts(parser):
