@@ -463,7 +463,15 @@ def get_default_args():
         'vocab_min_frequency': 1,
         'vocab_size': None,
         'weight_decay': None,
-        'word_embeddings_size': 100
+        'word_embeddings_size': 100,
+        'lr_step_decay': None,
+        'warmup_steps': None,
+        'decay_steps': None,
+        'scheduler': None,
+        'step_size': None,
+        'gamma': 0.1,
+        'eta_min': 1e-7,
+        't_max': None,
     }
 
 

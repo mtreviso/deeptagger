@@ -8,6 +8,7 @@ from deeptagger import features
 from deeptagger import iterator
 from deeptagger import models
 from deeptagger import optimizer
+from deeptagger import scheduler
 from deeptagger import opts
 from deeptagger import train
 from deeptagger.predict import transform_classes_to_tags
@@ -73,7 +74,7 @@ class Tagger:
             options = vars(self.options)
         else:
             options = opts.get_default_args()
-            options.gpu_id = self.gpu_id
+            options['gpu_id'] = self.gpu_id
         options.update(args)
         options = Namespace(**options)
         options.output_dir = cli.configure_output(options.output_dir)
@@ -86,7 +87,7 @@ class Tagger:
         self.fields_tuples = result[1]
         self.model = result[2]
         self.optim = result[3]
-        self.scheduler_optim  = result[4]
+        self.scheduler_optim = result[4]
         self._loaded = True
 
     def save(self, dir_path):
