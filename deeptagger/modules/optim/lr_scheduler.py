@@ -1,15 +1,18 @@
 import math
-from torch.optim.lr_scheduler import StepLR
+from torch.optim.lr_scheduler import _LRScheduler
 
 
-class FakeLR(StepLR):
+class FakeLR(_LRScheduler):
     """Keep the same learning rate."""
 
     def __init__(self, optimizer, last_epoch=-1):
         super().__init__(optimizer, last_epoch)
 
+    def step(self):
+        pass
+
     def get_lr(self):
-        return [base_lr for base_lr in self.base_lrs]
+        pass
 
 
 class StepOptimizerLRScheduler:

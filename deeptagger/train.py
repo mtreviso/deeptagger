@@ -67,7 +67,7 @@ def run(options):
         model = models.build(options, fields_tuples)
         logging.info('Building optimizer...')
         optim = optimizer.build(options, model.parameters())
-        logging.info('Wrapping optimizer inside a scheduler...')
+        logging.info('Building scheduler...')
         scheduler_optim = scheduler.build(options, optim)
 
     logging.info('Building trainer...')

@@ -35,18 +35,17 @@ def build_step_decay_wrapper(options, optim):
     kwargs = {}
     lr_step_decay_class = available_step_decays[options.lr_step_decay]
 
-    if options.learning_rate is not None:
+    if options.warmup_steps is not None:
         kwargs['warmup_steps'] = options.warmup_steps
-    if options.learning_rate is not None:
+    if options.decay_steps is not None:
         kwargs['decay_steps'] = options.decay_steps
     if options.lr_step_decay == 'noam':
-        kwargs['model_size'] = max(options.hidden_sizes)
+        kwargs['model_size'] = max(options.hidden_size)
     elif options.lr_step_decay == 'exp':
         kwargs['initial_lr'] = options.learning_rate
 
     lr_step_decay = lr_step_decay_class(**kwargs)
-    lr = options.learning_rate
-    wrapped_optim = StepDecayOptimizer(optim, lr, lr_step_decay)
+    wrapped_optim = StepDecayOptimizer(optim, lr_step_decay)
     return wrapped_optim
 
 
@@ -78,9 +77,10 @@ def build(options, model_parameters):
     parameters = filter(lambda p: p.requires_grad, model_parameters)
     optim = optim_class(parameters, **kwargs)
 
+    # wrap optimizer inside the step decay optimizer
     if options.lr_step_decay is not None:
-        # TODO: fix this! currently, we can't pass a wrapper to a LRScheduler
-        return build_step_decay_wrapper(options, optim)
+        optim = build_step_decay_wrapper(options, optim)
+
     return optim
 
 

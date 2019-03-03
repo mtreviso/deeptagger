@@ -30,7 +30,6 @@ def build(options, optim):
         kwargs['t_max'] = options.t_max
         kwargs['eta_min'] = options.eta_min
 
-    # wrap optimizer in a scheduler object
     return scheduler_class(optim, **kwargs)
 
 

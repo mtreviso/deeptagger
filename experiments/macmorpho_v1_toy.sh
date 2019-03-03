@@ -9,8 +9,6 @@ python3 -m deeptagger train \
 					  --test-path "data/corpus/pt/macmorpho_v1_toy/test.txt" \
 					  --del-word " " \
 					  --del-tag "_" \
-					  --embeddings-format "polyglot" \
-					  --embeddings-path "data/embeddings/polyglot/pt/embeddings_pkl.tar.bz2" \
 					  --output-dir "runs/testing-macmorpho_v1_toy/" \
 					  --train-batch-size 128 \
 					  --dev-batch-size 128 \
@@ -19,11 +17,17 @@ python3 -m deeptagger train \
 					  --early-stopping-patience 3 \
 					  --restore-best-model \
 					  --final-report \
-					  --add-embeddings-vocab \
 					  --epochs 2 \
-					  --save "saved-models/testing-toy-save/" \
 					  --use-prefixes \
 					  --use-suffixes \
-					  --use-caps
+					  --use-caps \
+					  --save "saved-models/testing-toy-save/" \
+					  --scheduler "exponential" \
+					  --gamma 0.1 \
+					  --lr-step-decay noam \
+					  --warmup-steps 2000 \
+					  # --embeddings-format "polyglot" \
+					  # --embeddings-path "data/embeddings/polyglot/pt/embeddings_pkl.tar.bz2" \
+					  # --add-embeddings-vocab \
 
 

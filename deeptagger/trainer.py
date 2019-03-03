@@ -119,11 +119,11 @@ class Trainer:
                 report_stats_final(self.test_stats_history)
 
     def train_epoch(self):
+        self.scheduler_optim.step()
         self.model.train()
         self.train_stats.reset()
         indexes = []
         for i, batch in enumerate(self.train_iter, start=1):
-            self.scheduler_optim.step()
             self.model.zero_grad()
             pred = self.model(batch)
             loss = self.model.loss(pred, batch.tags)
