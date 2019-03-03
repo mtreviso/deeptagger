@@ -101,4 +101,4 @@ def run(options):
         logging.info('Saving scheduler...')
         scheduler.save(config_path, scheduler_optim)
 
-    return options, fields_tuples, model, scheduler_optim
+    return options, fields_tuples, model, optim, scheduler_optim

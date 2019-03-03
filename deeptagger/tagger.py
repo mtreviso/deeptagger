@@ -24,6 +24,7 @@ class Tagger:
         self.options = None
         self.model = None
         self.optim = None
+        self.scheduler_optim = None
         self.gpu_id = gpu_id
         self._loaded = False
 
@@ -35,6 +36,7 @@ class Tagger:
         self.model = models.load(dir_path, self.fields_tuples)
         if Path(dir_path, constants.OPTIMIZER).exists():
             self.optim = optimizer.load(dir_path, self.model.parameters())
+            self.scheduler_optim = scheduler.load(dir_path, self.optim)
         self._loaded = True
 
     def predict(self, texts, batch_size=32, prediction_type='classes'):
@@ -84,6 +86,7 @@ class Tagger:
         self.fields_tuples = result[1]
         self.model = result[2]
         self.optim = result[3]
+        self.scheduler_optim  = result[4]
         self._loaded = True
 
     def save(self, dir_path):
@@ -93,3 +96,4 @@ class Tagger:
         fields.save_vocabs(dir_path, self.fields_tuples)
         models.save(dir_path, self.model)
         optimizer.save(dir_path, self.optim)
+        scheduler.save(dir_path, self.scheduler_optim)
