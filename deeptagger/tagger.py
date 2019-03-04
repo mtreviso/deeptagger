@@ -1,7 +1,7 @@
 from argparse import Namespace
 from pathlib import Path
 
-from deeptagger import cli
+from deeptagger import config_utils
 from deeptagger import constants
 from deeptagger.dataset import dataset, fields
 from deeptagger import features
@@ -77,10 +77,10 @@ class Tagger:
             options['gpu_id'] = self.gpu_id
         options.update(args)
         options = Namespace(**options)
-        options.output_dir = cli.configure_output(options.output_dir)
-        cli.configure_logger(options.debug, options.output_dir)
-        cli.configure_seed(options.seed)
-        cli.configure_device(options.gpu_id)
+        options.output_dir = config_utils.configure_output(options.output_dir)
+        config_utils.configure_logger(options.debug, options.output_dir)
+        config_utils.configure_seed(options.seed)
+        config_utils.configure_device(options.gpu_id)
         self.options = options
         result = train.run(self.options)
         self.options = result[0]

@@ -8,7 +8,7 @@ class FakeLR(_LRScheduler):
     def __init__(self, optimizer, last_epoch=-1):
         super().__init__(optimizer, last_epoch)
 
-    def step(self):
+    def step(self, epoch=None):
         pass
 
     def get_lr(self):
@@ -20,6 +20,15 @@ class StepOptimizerLRScheduler:
         pass
 
     def __call__(self, step):
+        """
+        Calculate the LR scale factor for the current optimization step
+
+        Args:
+            step (int): current optimization step
+
+        Returns:
+            Factor to scale the learning rate
+        """
         raise NotImplementedError
 
 

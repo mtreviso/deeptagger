@@ -20,7 +20,7 @@ class Trainer:
         train_iter,
         model,
         optimizer,
-        scheduler_optim,
+        scheduler,
         options,
         dev_iter=None,
         test_iter=None
@@ -30,7 +30,7 @@ class Trainer:
         self.dev_iter = dev_iter
         self.test_iter = test_iter
         self.optimizer = optimizer
-        self.scheduler_optim = scheduler_optim
+        self.scheduler = scheduler
         self.epochs = options.epochs
         self.output_dir = options.output_dir
         self.dev_checkpoint_epochs = options.dev_checkpoint_epochs
@@ -119,7 +119,7 @@ class Trainer:
                 report_stats_final(self.test_stats_history)
 
     def train_epoch(self):
-        self.scheduler_optim.step()
+        self.scheduler.step()
         self.model.train()
         self.train_stats.reset()
         indexes = []
@@ -170,13 +170,13 @@ class Trainer:
         logging.info('Saving training state to {}'.format(output_path))
         models.save(output_path, self.model)
         optimizer.save(output_path, self.optimizer)
-        scheduler.save(output_path, self.scheduler_optim)
+        scheduler.save(output_path, self.scheduler)
 
     def load(self, directory):
         logging.info('Loading training state from {}'.format(directory))
         models.load_state(directory, self.model)
         optimizer.load_state(directory, self.optimizer)
-        scheduler.load_state(directory, self.scheduler_optim)
+        scheduler.load_state(directory, self.scheduler)
 
     def restore_epoch(self, epoch):
         epoch_dir = 'epoch_{}'.format(epoch)

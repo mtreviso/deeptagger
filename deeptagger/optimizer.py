@@ -32,27 +32,36 @@ available_step_decays = {
 
 
 def build_step_decay_wrapper(options, optim):
-    kwargs = {}
-    lr_step_decay_class = available_step_decays[options.lr_step_decay]
+    lr_scheduler_sd_class = available_step_decays[options.lr_step_decay]
 
+    # the user should set options accordingly to the chosen lr scheduler
+    kwargs = {}
     if options.warmup_steps is not None:
         kwargs['warmup_steps'] = options.warmup_steps
     if options.decay_steps is not None:
         kwargs['decay_steps'] = options.decay_steps
+
+    # the user doesn't have to worry about these two:
     if options.lr_step_decay == 'noam':
         kwargs['model_size'] = max(options.hidden_size)
     elif options.lr_step_decay == 'exp':
         kwargs['initial_lr'] = options.learning_rate
 
-    lr_step_decay = lr_step_decay_class(**kwargs)
-    wrapped_optim = StepDecayOptimizer(optim, lr_step_decay)
+    # instantiate lr scheduler
+    lr_scheduler_sd = lr_scheduler_sd_class(**kwargs)
+
+    # wrapper the optimizer together with the lr scheduler
+    wrapped_optim = StepDecayOptimizer(optim, lr_scheduler_sd)
+
     return wrapped_optim
 
 
 def build(options, model_parameters):
-    kwargs = {}
     optim_class = available_optimizers[options.optimizer]
 
+    # if you pick an optimizer and provide an optimization option that doesn't
+    # belong to it, then an exception will be trown later -> up to the user.
+    kwargs = {}
     if options.learning_rate is not None:
         kwargs['lr'] = options.learning_rate
     if options.weight_decay is not None:
@@ -74,7 +83,14 @@ def build(options, model_parameters):
     if options.optimizer == 'sgd' and options.learning_rate is None:
         kwargs['lr'] = 0.1
 
+    # amsgrad is defined only for adam and adamw
+    if options.optimizer in ('adam', 'adamw'):
+        kwargs['amsgrad'] = options.amsgrad
+
+    # get valid parameters (unfreezed ones)
     parameters = filter(lambda p: p.requires_grad, model_parameters)
+
+    # instantiate optimizer
     optim = optim_class(parameters, **kwargs)
 
     # wrap optimizer inside the step decay optimizer

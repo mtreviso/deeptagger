@@ -1,3 +1,6 @@
+# this is not exactly a torch module :-/
+
+
 class StepDecayOptimizer:
     """Simple wrapper that implements learning rate decay during
     optimization steps.

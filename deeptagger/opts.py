@@ -342,6 +342,10 @@ def train_opts(parser):
                        default=None,
                        help='Smoothing constant. Used only for: rmsprop. '
                             'Let unseted to use default values.')
+    group.add_argument('--amsgrad',
+                       action='store_true',
+                       help='Whether to use the AMSGrad variant for '
+                            'Adam and AdamW.')
     # optimizer with learning rate decay during training steps
     group.add_argument('--lr-step-decay',
                        default=None,

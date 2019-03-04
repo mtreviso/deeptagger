@@ -2,7 +2,7 @@ import argparse
 import logging
 from pprint import pformat
 
-from deeptagger import cli
+from deeptagger import config_utils
 from deeptagger import opts
 from deeptagger import predict
 from deeptagger import train
@@ -18,10 +18,10 @@ opts.predict_opts(parser)
 
 if __name__ == '__main__':
     options = parser.parse_args()
-    options.output_dir = cli.configure_output(options.output_dir)
-    cli.configure_logger(options.debug, options.output_dir)
-    cli.configure_seed(options.seed)
-    cli.configure_device(options.gpu_id)
+    options.output_dir = config_utils.configure_output(options.output_dir)
+    config_utils.configure_logger(options.debug, options.output_dir)
+    config_utils.configure_seed(options.seed)
+    config_utils.configure_device(options.gpu_id)
 
     if options.task == 'train':
         logging.info('Running options:\n{}'.format(pformat(vars(options))))
