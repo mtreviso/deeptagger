@@ -50,12 +50,26 @@ def run(options):
     predictions = predicter.predict(options.prediction_type)
 
     if options.prediction_type == 'classes':
-        predictions = transform_classes_to_tags(tags_field, predictions)
+        prediction_tags = transform_classes_to_tags(tags_field, predictions)
+        predictions_str = transform_predictions_to_text(prediction_tags)
+    elif options.prediction_type == 'probas':
+        predictions_str = transform_predictions_to_text(predictions)
 
-    example_str = save_predicted_probabilities(options.output_dir, predictions)
-    if options.text is not None:
-        print(options.text)
-        print(example_str)
+    if options.text is None:
+        save_predictions(options.output_dir, predictions_str)
+    else:
+        logging.info(options.text)
+        logging.info(predictions_str)
+
+    return predictions
+
+
+def save_predictions(directory, predictions_str):
+    directory = Path(directory)
+    directory.mkdir(parents=True, exist_ok=True)
+    output_path = Path(directory, constants.PREDICTIONS)
+    output_path.write_text(predictions_str)
+    logging.info('Predictions saved in {}'.format(output_path))
 
 
 def transform_classes_to_tags(tags_field, predictions):
@@ -66,11 +80,18 @@ def transform_classes_to_tags(tags_field, predictions):
     return tagged_predicitons
 
 
-def save_predicted_probabilities(directory, predictions):
-    directory = Path(directory)
-    directory.mkdir(parents=True, exist_ok=True)
-    output_path = Path(directory, constants.PREDICTIONS)
-    logging.info('Saving predictions to {}'.format(output_path))
-    ex_str = '\n'.join([' '.join(map(str, sent)) for sent in predictions])
-    Path(output_path).write_text(ex_str)
-    return ex_str
+def transform_predictions_to_text(predictions):
+    text = []
+    is_prob = isinstance(predictions[0][0], list)
+    for pred in predictions:
+        sentence = []
+        for p in pred:
+            if is_prob:
+                sentence.append(', '.join(['%.8f' % c for c in p]))
+            else:
+                sentence.append(p)
+        if is_prob:
+            text.append(' | '.join(sentence))
+        else:
+            text.append(' '.join(sentence))
+    return '\n'.join(text)

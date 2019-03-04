@@ -24,7 +24,7 @@ def general_opts(parser):
     # Output
     group.add_argument('-o', '--output-dir',
                        type=str,
-                       help='Output files for this run under this dir. '
+                       help='Will save files for this run under this dir. '
                             'If not specified, it will create a timestamp dir '
                             'inside `runs` dir.')
 
@@ -90,7 +90,7 @@ def preprocess_opts(parser):
     group = parser.add_argument_group('data-pruning')
     group.add_argument('--max-length',
                        type=int,
-                       default=float("inf"),
+                       default=10**12,  # max-length > 1 trillion? ow lord
                        help='Maximum sequence length')
     group.add_argument('--min-length',
                        type=int,
@@ -262,15 +262,17 @@ def train_opts(parser):
     group.add_argument('--save-checkpoint-epochs',
                        type=int,
                        default=1,
-                       help='Save a checkpoint every X epochs.')
+                       help='Save a checkpoint every X epochs. Set to 0 if '
+                            'you dont want to save any checkpoint.')
     group.add_argument('--save-best-only',
                        action='store_true',
-                       help='Save only when validation loss is improved.')
+                       help='Save only when validation loss is improved. '
+                       '(recommended)')
     group.add_argument('--early-stopping-patience',
                        type=int,
                        default=0,
                        help='Stop training if validation loss is not '
-                            'improved after passing X epochs. By default'
+                            'improved after passing X epochs. By default '
                             'the early stopping procedure is not applied.')
     group.add_argument('--restore-best-model',
                        action='store_true',
@@ -332,11 +334,8 @@ def train_opts(parser):
                             'sgd and rmsprop. '
                             'Let unseted to use default values.')
     group.add_argument('--nesterov',
-                       type=float,
-                       default=None,
-                       help='Enables Nesterov momentum. Used only for: '
-                            'sgd. '
-                            'Let unseted to use default values.')
+                       action='store_true',
+                       help='Enables Nesterov momentum. Used only for sgd.')
     group.add_argument('--alpha',
                        type=float,
                        default=None,
@@ -402,91 +401,12 @@ def predict_opts(parser):
 
 
 def get_default_args():
-    return {
-        'add_embeddings_vocab': False,
-        'alpha': None,
-        'beta0': None,
-        'beta1': None,
-        'bidirectional': False,
-        'caps_embeddings_size': 100,
-        'conv_size': 100,
-        'debug': False,
-        'del_tag': '_',
-        'del_word': ' ',
-        'dev_batch_size': 64,
-        'dev_checkpoint_epochs': 1,
-        'dev_path': None,
-        'dropout': 0.5,
-        'early_stopping_patience': 0,
-        'emb_dropout': 0.4,
-        'embeddings_format': None,
-        'embeddings_path': None,
-        'epochs': 10,
-        'final_report': False,
-        'freeze_embeddings': False,
-        'gpu_id': None,
-        'hidden_size': [100],
-        'keep_rare_with_embedding': False,
-        'kernel_size': 7,
-        'learning_rate': None,
-        'load': None,
-        'loss_weights': 'same',
-        'lr_decay': None,
-        'max_length': float("inf"),
-        'min_length': 0,
-        'model': 'simple_lstm',
-        'momentum': None,
-        'nesterov': None,
-        'optimizer': 'sgd',
-        'output_dir': None,
-        'pool_length': 3,
-        'prediction_type': 'classes',
-        'prefix_embeddings_size': 100,
-        'prefix_max_length': 2,
-        'prefix_min_length': 2,
-        'restore_best_model': False,
-        'resume_epoch': None,
-        'rho': None,
-        'save': None,
-        'save_best_only': False,
-        'save_checkpoint_epochs': 1,
-        'seed': 42,
-        'shuffle': False,
-        'suffix_embeddings_size': 100,
-        'suffix_max_length': 2,
-        'suffix_min_length': 2,
-        'sum_bidir': False,
-        'task': 'predict',
-        'test_path': None,
-        'text': None,
-        'train_batch_size': 64,
-        'train_path': None,
-        'use_caps': False,
-        'use_prefixes': False,
-        'use_suffixes': False,
-        'vocab_min_frequency': 1,
-        'vocab_size': None,
-        'weight_decay': None,
-        'word_embeddings_size': 100,
-        'lr_step_decay': None,
-        'warmup_steps': None,
-        'decay_steps': None,
-        'scheduler': None,
-        'step_size': None,
-        'gamma': 0.1,
-        'eta_min': 1e-7,
-        't_max': None,
-    }
-
-
-# if __name__ == '__main__':
-#     from pprint import pprint
-#     import argparse
-#     parser = argparse.ArgumentParser(description='DeepTagger')
-#     general_opts(parser)
-#     preprocess_opts(parser)
-#     model_opts(parser)
-#     train_opts(parser)
-#     predict_opts(parser)
-#     options = parser.parse_args()
-#     pprint(vars(options))
+    import argparse
+    parser = argparse.ArgumentParser()
+    general_opts(parser)
+    preprocess_opts(parser)
+    model_opts(parser)
+    train_opts(parser)
+    predict_opts(parser)
+    args = parser.parse_args()
+    return vars(args)

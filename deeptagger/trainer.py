@@ -43,7 +43,7 @@ class Trainer:
 
         train_vocab = train_iter.dataset.fields['words'].vocab.orig_stoi
         emb_vocab = train_iter.dataset.fields['words'].vocab.vectors_words
-        self.train_stats = Stats(train_vocab=train_vocab,
+        self.train_stats = Stats(train_vocab={},
                                  emb_vocab=emb_vocab,
                                  mask_id=constants.TAGS_PAD_ID)
         self.dev_stats = Stats(train_vocab=train_vocab,

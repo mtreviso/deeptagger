@@ -1,4 +1,5 @@
 # flake8: noqa: E501
+""" Code from: https://github.com/mtreviso/linear-chain-crf """
 
 import torch
 from torch import nn
@@ -20,7 +21,12 @@ class CRF(nn.Module):
     """
 
     def __init__(
-        self, nb_labels, bos_tag_id, eos_tag_id, pad_tag_id=None, batch_first=True
+        self, 
+        nb_labels, 
+        bos_tag_id, 
+        eos_tag_id, 
+        pad_tag_id=None, 
+        batch_first=True
     ):
         super().__init__()
 
@@ -91,7 +97,7 @@ class CRF(nn.Module):
 
         scores = self._compute_scores(emissions, tags, mask=mask)
         partition = self._compute_log_partition(emissions, mask=mask)
-        return torch.sum(scores - partition)
+        return torch.mean(scores - partition)  # changed from sum to mean
 
     def decode(self, emissions, mask=None):
         """Find the most probable sequence of labels given the emissions using
@@ -192,36 +198,17 @@ class CRF(nn.Module):
         alphas = self.transitions[self.BOS_TAG_ID, :].unsqueeze(0) + emissions[:, 0]
 
         for i in range(1, seq_length):
-            alpha_t = []
+            # (bs, nb_labels) -> (bs, 1, nb_labels)
+            e_scores = emissions[:, i].unsqueeze(1)
 
-            for tag in range(nb_labels):
+            # (nb_labels, nb_labels) -> (bs, nb_labels, nb_labels)
+            t_scores = self.transitions.unsqueeze(0)
 
-                # get the emission for the current tag
-                e_scores = emissions[:, i, tag]
+            # (bs, nb_labels)  -> (bs, nb_labels, 1)
+            a_scores = alphas.unsqueeze(2)
 
-                # broadcast emission to all labels
-                # since it will be the same for all previous tags
-                # (bs, nb_labels)
-                e_scores = e_scores.unsqueeze(1)
-
-                # transitions from something to our tag
-                t_scores = self.transitions[:, tag]
-
-                # broadcast the transition scores to all batches
-                # (bs, nb_labels)
-                t_scores = t_scores.unsqueeze(0)
-
-                # combine current scores with previous alphas
-                # since alphas are in log space (see logsumexp below),
-                # we add them instead of multiplying
-                scores = e_scores + t_scores + alphas
-
-                # add the new alphas for the current tag
-                alpha_t.append(torch.logsumexp(scores, dim=1))
-
-            # create a torch matrix from alpha_t
-            # (bs, nb_labels)
-            new_alphas = torch.stack(alpha_t).t()
+            scores = e_scores + t_scores + a_scores
+            new_alphas = torch.logsumexp(scores, dim=1)
 
             # set alphas if the mask is valid, otherwise keep the current values
             is_valid = mask[:, i].unsqueeze(-1)
@@ -255,43 +242,31 @@ class CRF(nn.Module):
         backpointers = []
 
         for i in range(1, seq_length):
-            alpha_t = []
-            backpointers_t = []
+            # (bs, nb_labels) -> (bs, 1, nb_labels)
+            e_scores = emissions[:, i].unsqueeze(1)
 
-            for tag in range(nb_labels):
+            # (nb_labels, nb_labels) -> (bs, nb_labels, nb_labels)
+            t_scores = self.transitions.unsqueeze(0)
 
-                # get the emission for the current tag and broadcast to all labels
-                e_scores = emissions[:, i, tag]
-                e_scores = e_scores.unsqueeze(1)
+            # (bs, nb_labels)  -> (bs, nb_labels, 1)
+            a_scores = alphas.unsqueeze(2)
 
-                # transitions from something to our tag and broadcast to all batches
-                t_scores = self.transitions[:, tag]
-                t_scores = t_scores.unsqueeze(0)
+            # combine current scores with previous alphas
+            scores = e_scores + t_scores + a_scores
 
-                # combine current scores with previous alphas
-                scores = e_scores + t_scores + alphas
-
-                # so far is exactly like the forward algorithm,
-                # but now, instead of calculating the logsumexp,
-                # we will find the highest score and the tag associated with it
-                max_score, max_score_tag = torch.max(scores, dim=-1)
-
-                # add the max score for the current tag
-                alpha_t.append(max_score)
-
-                # add the max_score_tag for our list of backpointers
-                backpointers_t.append(max_score_tag)
-
-            # create a torch matrix from alpha_t
-            # (bs, nb_labels)
-            new_alphas = torch.stack(alpha_t).t()
+            # so far is exactly like the forward algorithm,
+            # but now, instead of calculating the logsumexp,
+            # we will find the highest score and the tag associated with it
+            max_scores, max_score_tags = torch.max(scores, dim=1)
 
             # set alphas if the mask is valid, otherwise keep the current values
             is_valid = mask[:, i].unsqueeze(-1)
-            alphas = is_valid * new_alphas + (1 - is_valid) * alphas
+            alphas = is_valid * max_scores + (1 - is_valid) * alphas
 
-            # append the new backpointers
-            backpointers.append(backpointers_t)
+            # add the max_score_tags for our list of backpointers
+            # max_scores has shape (batch_size, nb_labels) so we transpose it to
+            # be compatible with our previous loopy version of viterbi
+            backpointers.append(max_score_tags.t())
 
         # add the scores for the final transition
         last_transition = self.transitions[:, self.EOS_TAG_ID]

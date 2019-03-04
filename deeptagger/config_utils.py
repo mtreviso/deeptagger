@@ -13,7 +13,7 @@ def configure_output(output_dir):
         output_time = time.strftime('%Y-%m-%d_%H:%M:%S')
         output_path = Path('runs', output_time)
         output_path.mkdir(parents=True, exist_ok=True)
-        return str(output_path)
+        output_dir = str(output_path)
     else:
         Path(output_dir).mkdir(parents=True, exist_ok=True)
     return output_dir

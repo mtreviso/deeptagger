@@ -72,20 +72,18 @@ def build(options, model_parameters):
         kwargs['rho'] = options.rho
     if options.beta0 is not None and options.beta1 is not None:
         kwargs['betas'] = (options.beta0, options.beta1)
-    if options.momentum:
+    if options.momentum is not None:
         kwargs['momentum'] = options.momentum
+    if options.alpha is not None:
+        kwargs['alpha'] = options.alpha
     if options.nesterov:
         kwargs['nesterov'] = options.nesterov
-    if options.alpha:
-        kwargs['alpha'] = options.alpha
+    if options.amsgrad:
+        kwargs['amsgrad'] = options.amsgrad
 
     # learning rate is a required arg for sgd
     if options.optimizer == 'sgd' and options.learning_rate is None:
         kwargs['lr'] = 0.1
-
-    # amsgrad is defined only for adam and adamw
-    if options.optimizer in ('adam', 'adamw'):
-        kwargs['amsgrad'] = options.amsgrad
 
     # get valid parameters (unfreezed ones)
     parameters = filter(lambda p: p.requires_grad, model_parameters)
