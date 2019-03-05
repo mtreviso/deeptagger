@@ -22,6 +22,7 @@ python3 -m deeptagger train \
                       --use-suffixes \
                       --use-caps \
                       --save "saved-models/testing-toy-save/" \
+                      # --tensorboard
                       # --amsgrad \
                       # --nesterov \
                       # --momentum 0.9 \

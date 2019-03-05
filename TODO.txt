@@ -16,9 +16,9 @@ Adicionar viterbi decoder (só colocar)
 
 Next steps:
 Adicionar word embeddings do ELMO
+
+
 Scripts para plotar loss/acc em relacao as epocas
-
-
 
 Adicionar BPE vocab (mto empenho -> e não tem bons resultados):
 https://pdfs.semanticscholar.org/87b8/60da2501169aafafdfa0cac18e6779a198c1.pdf

@@ -46,6 +46,10 @@ def general_opts(parser):
     group.add_argument('--debug',
                        action='store_true',
                        help='Debug mode.')
+    group.add_argument('--tensorboard',
+                       action='store_true',
+                       help='Whether to use tensorboardX for logging stats'
+                            ' in addition to the regular output logger.')
 
     # Save and load
     group = parser.add_argument_group('save-load')

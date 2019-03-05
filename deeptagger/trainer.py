@@ -4,12 +4,11 @@ from pathlib import Path
 
 import torch
 
-from deeptagger import constants
 from deeptagger import models
 from deeptagger import optimizer
 from deeptagger import scheduler
 from deeptagger.models.utils import indexes_to_words
-from deeptagger.report import report_progress, report_stats, report_stats_final
+from deeptagger.reporter import Reporter
 from deeptagger.stats import Stats
 
 
@@ -39,22 +38,16 @@ class Trainer:
         self.early_stopping_patience = options.early_stopping_patience
         self.restore_best_model = options.restore_best_model
         self.current_epoch = 1
-        self.final_report = options.final_report
-
-        train_vocab = train_iter.dataset.fields['words'].vocab.orig_stoi
-        emb_vocab = train_iter.dataset.fields['words'].vocab.vectors_words
-        self.train_stats = Stats(train_vocab={},
-                                 emb_vocab=emb_vocab,
-                                 mask_id=constants.TAGS_PAD_ID)
-        self.dev_stats = Stats(train_vocab=train_vocab,
-                               emb_vocab=emb_vocab,
-                               mask_id=constants.TAGS_PAD_ID)
-        self.test_stats = Stats(train_vocab=train_vocab,
-                                emb_vocab=emb_vocab,
-                                mask_id=constants.TAGS_PAD_ID)
         self.train_stats_history = []
         self.dev_stats_history = []
         self.test_stats_history = []
+        self.final_report = options.final_report
+        train_vocab = train_iter.dataset.fields['words'].vocab.orig_stoi
+        emb_vocab = train_iter.dataset.fields['words'].vocab.vectors_words
+        self.train_stats = Stats(emb_vocab=emb_vocab)
+        self.dev_stats = Stats(train_vocab=train_vocab, emb_vocab=emb_vocab)
+        self.test_stats = Stats(train_vocab=train_vocab, emb_vocab=emb_vocab)
+        self.reporter = Reporter(options.output_dir, options.tensorboard)
 
     def train(self):
 
@@ -97,7 +90,7 @@ class Trainer:
                 # Only stop if the desired patience epochs was reached
                 passed_epochs = epoch - self.dev_stats.best_acc.epoch
                 if passed_epochs == self.early_stopping_patience:
-                    logging.info('Stop training! No improvement on accuracy '
+                    logging.info('Training stopped! No improvements on acc. '
                                  'after {} epochs'.format(passed_epochs))
                     if self.restore_best_model:
                         if self.dev_stats.best_acc.epoch < epoch:
@@ -110,56 +103,80 @@ class Trainer:
 
         if self.final_report:
             logging.info('Training final report: ')
-            report_stats_final(self.train_stats_history)
+            self.reporter.report_stats_history(self.train_stats_history)
             if self.dev_iter:
                 logging.info('Dev final report: ')
-                report_stats_final(self.dev_stats_history)
+                self.reporter.report_stats_history(self.dev_stats_history)
             if self.test_iter:
                 logging.info('Test final report: ')
-                report_stats_final(self.test_stats_history)
+                self.reporter.report_stats_history(self.test_stats_history)
+        self.reporter.close()
 
     def train_epoch(self):
+        self.reporter.set_mode('train')
+        self.reporter.set_epoch(self.current_epoch)
+        self.train_stats.reset()
         self.scheduler.step()
         self.model.train()
-        self.train_stats.reset()
+
         indexes = []
         for i, batch in enumerate(self.train_iter, start=1):
+            indexes.extend(batch.words)
+
+            # basic training steps
             self.model.zero_grad()
             pred = self.model(batch)
             loss = self.model.loss(pred, batch.tags)
             loss.backward()
             self.optimizer.step()
+
+            # keep stats object updated
             self.train_stats.update(loss.item(), pred, batch.tags)
-            report_progress(i, len(self.train_iter), self.train_stats.loss / i)
-            indexes.extend(batch.words)
+
+            # report current loss to the user
+            self.reporter.report_progress(i, len(self.train_iter), loss.item())
+
         inv_vocab = self.train_iter.dataset.fields['words'].vocab.itos
         words = indexes_to_words(indexes, inv_vocab)
         self.train_stats.calc(self.current_epoch, words)
         self.train_stats_history.append(self.train_stats.to_dict())
-        report_stats(self.train_stats)
+        self.reporter.report_stats(self.train_stats)
 
     def dev_epoch(self):
+        self.reporter.set_mode('dev')
+        self.reporter.set_epoch(self.current_epoch)
+        self.dev_stats.reset()
         self._eval(self.dev_iter, self.dev_stats)
         self.dev_stats_history.append(self.dev_stats.to_dict())
-        report_stats(self.dev_stats)
+        self.reporter.report_stats(self.dev_stats)
 
     def test_epoch(self):
+        self.reporter.set_mode('test')
+        self.reporter.set_epoch(self.current_epoch)
+        self.test_stats.reset()
         self._eval(self.test_iter, self.test_stats)
         self.test_stats_history.append(self.test_stats.to_dict())
-        report_stats(self.test_stats)
+        self.reporter.report_stats(self.test_stats)
 
-    def _eval(self, dataset_iter, stats):
+    def _eval(self, ds_iterator, stats):
         self.model.eval()
-        stats.reset()
+
         indexes = []
         with torch.no_grad():
-            for i, batch in enumerate(dataset_iter, start=1):
+            for i, batch in enumerate(ds_iterator, start=1):
+                indexes.extend(batch.words)
+
+                # basic prediction steps
                 pred = self.model(batch)
                 loss = self.model.loss(pred, batch.tags)
+
+                # keep stats object updated
                 stats.update(loss.item(), pred, batch.tags)
-                report_progress(i, len(dataset_iter), stats.loss / i)
-                indexes.extend(batch.words)
-        inv_vocab = dataset_iter.dataset.fields['words'].vocab.itos
+
+                # report current loss to the user
+                self.reporter.report_progress(i, len(ds_iterator), loss.item())
+
+        inv_vocab = ds_iterator.dataset.fields['words'].vocab.itos
         words = indexes_to_words(indexes, inv_vocab)
         stats.calc(self.current_epoch, words)
 

@@ -12,19 +12,21 @@ class BestValueEpoch:
 
 
 class Stats(object):
+    """
+    Keep stats information during training and evaluation
 
-    def __init__(self,
-                 train_vocab=None,
-                 emb_vocab=None,
-                 mask_id=constants.TAGS_PAD_ID):
-        """
-        :param train_vocab: a set object with words found in training data
-        :param emb_vocab: a set object with words found in embeddings data
-        :param mask_id: constant used for masking tags
-        """
+    Args:
+        train_vocab (dict): dict with words found in training data
+        emb_vocab (dict): dict with words found in embeddings data
+    """
+    def __init__(self, train_vocab=None, emb_vocab=None):
+        if train_vocab is None:
+            train_vocab = dict()
+        if emb_vocab is None:
+            emb_vocab = dict()
         self.train_vocab = train_vocab
         self.emb_vocab = emb_vocab
-        self.mask_id = mask_id
+        self.mask_id = constants.TAGS_PAD_ID
 
         # this attrs will be updated every time a new prediciton is added
         self.pred_classes = []
@@ -81,7 +83,7 @@ class Stats(object):
         self.golds.append(unroll(self._golds_sent[-1]))
 
     def get_loss(self):
-        return self.loss / self.nb_batches
+        return self.loss
 
     def _get_bins(self):
         if self._flattened_preds is None:
