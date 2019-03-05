@@ -134,13 +134,14 @@ class Trainer:
             self.train_stats.update(loss.item(), pred, batch.tags)
 
             # report current loss to the user
-            self.reporter.report_progress(i, len(self.train_iter), loss.item())
+            acum_loss = self.train_stats.get_loss()
+            self.reporter.report_progress(i, len(self.train_iter), acum_loss)
 
         inv_vocab = self.train_iter.dataset.fields['words'].vocab.itos
         words = indexes_to_words(indexes, inv_vocab)
         self.train_stats.calc(self.current_epoch, words)
         self.train_stats_history.append(self.train_stats.to_dict())
-        self.reporter.report_stats(self.train_stats)
+        self.reporter.report_stats(self.train_stats.to_dict())
 
     def dev_epoch(self):
         self.reporter.set_mode('dev')
@@ -148,7 +149,7 @@ class Trainer:
         self.dev_stats.reset()
         self._eval(self.dev_iter, self.dev_stats)
         self.dev_stats_history.append(self.dev_stats.to_dict())
-        self.reporter.report_stats(self.dev_stats)
+        self.reporter.report_stats(self.dev_stats.to_dict())
 
     def test_epoch(self):
         self.reporter.set_mode('test')
@@ -156,7 +157,7 @@ class Trainer:
         self.test_stats.reset()
         self._eval(self.test_iter, self.test_stats)
         self.test_stats_history.append(self.test_stats.to_dict())
-        self.reporter.report_stats(self.test_stats)
+        self.reporter.report_stats(self.test_stats.to_dict())
 
     def _eval(self, ds_iterator, stats):
         self.model.eval()

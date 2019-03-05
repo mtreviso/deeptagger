@@ -64,7 +64,17 @@ class WordEmbeddings(Vectors):
             self.stoi = dict(zip(self.itos, range(len(self.itos))))
             self.dim = embeddings.vector_size
             self.vectors = torch.Tensor(embeddings.vectors).view(-1, self.dim)
-        self.unk_vector = torch.mean(0).unsqueeze(0)
+        elif self.emb_format == 'fonseca':
+            import numpy as np
+            import os
+            embeddings = np.load(os.path.join(name, 'types-features.npy'))
+            texts = open(os.path.join(name, 'vocabulary.txt'), 'r').read()
+            words = set([w.strip() for w in texts.split('\n')])
+            self.itos = list(words)
+            self.stoi = dict(zip(self.itos, range(len(self.itos))))
+            self.dim = embeddings.shape[1]
+            self.vectors = torch.Tensor(embeddings).view(-1, self.dim)
+        self.unk_vector = self.vectors.mean(0).unsqueeze(0)
 
 
 def to_polyglot(token):
@@ -79,14 +89,20 @@ def to_polyglot(token):
     return token
 
 
+def to_fonseca(token):
+    mapping = {
+        UNK: '*rare*',
+        PAD: '*right*',
+        START: '*left*',
+        STOP: '*right*'
+    }
+    if token in mapping:
+        return mapping[token]
+    return token
+
+
 Polyglot = partial(WordEmbeddings, emb_format='polyglot', map_fn=to_polyglot)
 Word2Vec = partial(WordEmbeddings, emb_format='word2vec')
 FastText = partial(WordEmbeddings, emb_format='fasttext')
 Glove = partial(WordEmbeddings, emb_format='glove')
-
-AvailableEmbeddings = {
-    'polyglot': Polyglot,
-    'word2vec': Word2Vec,
-    'fasttext': FastText,
-    'glove': Glove
-}
+Fonseca = partial(WordEmbeddings, emb_format='fonseca', map_fn=to_fonseca)

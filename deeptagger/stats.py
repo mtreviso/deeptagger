@@ -83,7 +83,7 @@ class Stats(object):
         self.golds.append(unroll(self._golds_sent[-1]))
 
     def get_loss(self):
-        return self.loss
+        return self.loss / self.nb_batches
 
     def _get_bins(self):
         if self._flattened_preds is None:

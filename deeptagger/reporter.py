@@ -31,10 +31,9 @@ class Reporter:
                               'See `tensorboard` section in README.md '
                               'for more information on tensorboard logging.')
             self.tb_writer = SummaryWriter(output_dir)
-            logging.debug('Starting tensorboard logger...')
-            logging.debug('Type `tensorboard --logdir runs/` in your terminal '
-                          'to see live statistics. '
-                          '(`tensorflow` package required)')
+            logging.info('Starting tensorboard logger...')
+            logging.info('Type `tensorboard --logdir runs/` in your terminal '
+                         'to see live stats (`tensorflow` package required).')
         self.mode = None
         self.epoch = None
         self.output_dir = output_dir
@@ -92,8 +91,7 @@ class Reporter:
             mode_metric = '{}/{}'.format(self.mode, 'moving_loss')
             self.tb_writer.add_scalar(mode_metric, loss, j)
 
-    def report_stats(self, stats):
-        stats_dict = stats.to_dict()
+    def report_stats(self, stats_dict):
         self.show_head()
         self.show_stats(stats_dict)
         self.show_footer()

@@ -6,8 +6,21 @@ import torch
 from torchtext.data import Field
 
 from deeptagger import constants
-from deeptagger.dataset.vectors import AvailableEmbeddings
 from deeptagger.dataset.vocabulary import Vocabulary
+from deeptagger.dataset.vectors import (Polyglot,
+                                        Word2Vec,
+                                        FastText,
+                                        Glove,
+                                        Fonseca)
+
+
+available_embeddings = {
+    'polyglot': Polyglot,
+    'word2vec': Word2Vec,
+    'fasttext': FastText,
+    'glove': Glove,
+    'fonseca': Fonseca,
+}
 
 
 def load_vectors(options):
@@ -15,7 +28,7 @@ def load_vectors(options):
     if options.embeddings_format is not None:
         logging.info('Loading {} word embeddings from: {}'.format(
             options.embeddings_format, options.embeddings_path))
-        word_emb_cls = AvailableEmbeddings[options.embeddings_format]
+        word_emb_cls = available_embeddings[options.embeddings_format]
         vectors = word_emb_cls(options.embeddings_path, binary=False)
     return vectors
 

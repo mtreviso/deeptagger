@@ -1,4 +1,5 @@
 Criar modelos mais complexos:
+	+ Viterbi decoder (só usar o do CRF)
 	+ CRF (só empilhar nos já existentes)
 	+ Attention (só empilhar nos já existentes)
 	Transformer (só empilhar nos já existentes)
@@ -10,16 +11,16 @@ Adicionar regularização:
 			l2 = weight decay.
 			focar em l2)
 
-Testar com embeddings do carioca (ablation)
-Testar com diferentes word embeddings (ablation)
-Adicionar viterbi decoder (só colocar)
+Testar com diferentes word embeddings (ablation):
+	- polyglot
+	- word2vec
+	- fasttext
+	- glove
+	- fonseca
 
-Next steps:
-Adicionar word embeddings do ELMO
+Adicionar word embeddings do ELMO:
+	- dividir modelos em: base, body, head
 
-
-Scripts para plotar loss/acc em relacao as epocas
-
-Adicionar BPE vocab (mto empenho -> e não tem bons resultados):
+Adicionar BPE vocab (não tem bons resultados pra PoS tagging):
 https://pdfs.semanticscholar.org/87b8/60da2501169aafafdfa0cac18e6779a198c1.pdf
 

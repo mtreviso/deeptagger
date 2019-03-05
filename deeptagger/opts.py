@@ -6,6 +6,7 @@ from deeptagger import constants
 from deeptagger import models
 from deeptagger import optimizer
 from deeptagger import scheduler
+from deeptagger.dataset.fields import available_embeddings
 
 
 def load(path):
@@ -125,7 +126,7 @@ def preprocess_opts(parser):
     group.add_argument('--embeddings-format',
                        type=str,
                        default=None,
-                       choices=['polyglot', 'word2vec', 'fasttext', 'glove'],
+                       choices=list(available_embeddings.keys()),
                        help='Word embeddings format. '
                             'See README for specific formatting instructions.')
     group.add_argument('--embeddings-path',
@@ -207,7 +208,7 @@ def model_opts(parser):
                        help='Use prefixes as feature.')
     group.add_argument('--prefix-embeddings-size',
                        type=int,
-                       default=100,
+                       default=50,
                        help='Size of prefix embeddings.')
     group.add_argument('--prefix-min-length',
                        type=int,
@@ -222,7 +223,7 @@ def model_opts(parser):
                        help='Use suffixes as feature.')
     group.add_argument('--suffix-embeddings-size',
                        type=int,
-                       default=100,
+                       default=50,
                        help='Size of suffix embeddings.')
     group.add_argument('--suffix-min-length',
                        type=int,
@@ -237,7 +238,7 @@ def model_opts(parser):
                        help='Use capitalization as feature.')
     group.add_argument('--caps-embeddings-size',
                        type=int,
-                       default=100,
+                       default=50,
                        help='Size of capitalization embeddings.')
 
 
