@@ -5,14 +5,21 @@ Criar modelos mais complexos:
 
 Adicionar regularização:
 	Dropout depois de quais camadas? (ablation)
-	l1 l2? (ablation)
-	BatchNormalization?  (não faz muito sentido pra PLN)
+	LayerNormalization depois de quais camadas? (ablation)
+	l1 l2? (l1 = sparsity -> adicionar nn.l1loss aos parametros
+			l2 = weight decay.
+			focar em l2)
 
 Testar com embeddings do carioca (ablation)
 Testar com diferentes word embeddings (ablation)
 Adicionar viterbi decoder (só colocar)
 
 Next steps:
-Adicionar BPE vocab
 Adicionar word embeddings do ELMO
 Scripts para plotar loss/acc em relacao as epocas
+
+
+
+Adicionar BPE vocab (mto empenho -> e não tem bons resultados):
+https://pdfs.semanticscholar.org/87b8/60da2501169aafafdfa0cac18e6779a198c1.pdf
+

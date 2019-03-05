@@ -73,7 +73,7 @@ def run(options):
         sched = scheduler.build(options, optim)
 
     logging.info('Building trainer...')
-    trainer = Trainer(train_iter, model, optim, sched, options, 
+    trainer = Trainer(train_iter, model, optim, sched, options,
                       dev_iter=dev_iter, test_iter=test_iter)
 
     if options.resume_epoch and options.load is None:
