@@ -27,7 +27,7 @@ __author__ = 'Marcos Treviso'
 __email__ = 'marcostreviso@usp.br'
 
 __license__ = 'MIT'
-__copyright__ = 'Copyright 2018 Marcos Treviso'
+__copyright__ = 'Copyright 2019 Marcos Treviso'
 
 from .predicter import Predicter  # NOQA
 from .tagger import Tagger  # NOQA

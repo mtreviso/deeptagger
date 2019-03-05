@@ -25,7 +25,8 @@ def run(options):
                                 options.train_batch_size,
                                 is_train=True)
 
-    dev_dataset = dev_iter = None
+    dev_dataset = None
+    dev_iter = None
     if options.dev_path is not None:
         logging.info('Building dev dataset: {}'.format(options.dev_path))
         dev_dataset = dataset.build(options.dev_path, fields_tuples, options)
@@ -35,7 +36,8 @@ def run(options):
                                   options.dev_batch_size,
                                   is_train=False)
 
-    test_dataset = test_iter = None
+    test_dataset = None
+    test_iter = None
     if options.test_path is not None:
         logging.info('Building test dataset: {}'.format(options.test_path))
         test_dataset = dataset.build(options.test_path, fields_tuples, options)
@@ -57,7 +59,7 @@ def run(options):
         logging.info('Loading optimizer...')
         optim = optimizer.load(options.load, model.parameters())
         logging.info('Loading scheduler...')
-        scheduler_optim = scheduler.load(options.load, optim)
+        sched = scheduler.load(options.load, optim)
     else:
         logging.info('Building vocabulary...')
         fields.build_vocabs(fields_tuples, train_dataset, datasets, options)
@@ -68,17 +70,11 @@ def run(options):
         logging.info('Building optimizer...')
         optim = optimizer.build(options, model.parameters())
         logging.info('Building scheduler...')
-        scheduler_optim = scheduler.build(options, optim)
+        sched = scheduler.build(options, optim)
 
     logging.info('Building trainer...')
-    trainer = Trainer(
-        train_iter,
-        model,
-        optim,
-        scheduler_optim,
-        options,
-        dev_iter=dev_iter,
-        test_iter=test_iter)
+    trainer = Trainer(train_iter, model, optim, sched, options, 
+                      dev_iter=dev_iter, test_iter=test_iter)
 
     if options.resume_epoch and options.load is None:
         logging.info('Resuming training...')
@@ -99,6 +95,6 @@ def run(options):
         logging.info('Saving optimizer...')
         optimizer.save(config_path, optim)
         logging.info('Saving scheduler...')
-        scheduler.save(config_path, scheduler_optim)
+        scheduler.save(config_path, sched)
 
-    return fields_tuples, model, optim, scheduler_optim
+    return fields_tuples, model, optim, sched

@@ -28,12 +28,15 @@ class WordEmbeddings(Vectors):
         self.emb_format = emb_format
         self.map_fn = map_fn
         self.save_vectors = save_vectors
+        self.unk_vector = None
         super().__init__(name, **kwargs)
 
     def __getitem__(self, token):
         if token in self.stoi:
             token = self.map_fn(token)
             return self.vectors[self.stoi[token]]
+        elif self.unk_vector is not None:
+            return self.unk_vector.clone()
         else:
             return self.unk_init(torch.Tensor(1, self.dim))
 
@@ -61,6 +64,7 @@ class WordEmbeddings(Vectors):
             self.stoi = dict(zip(self.itos, range(len(self.itos))))
             self.dim = embeddings.vector_size
             self.vectors = torch.Tensor(embeddings.vectors).view(-1, self.dim)
+        self.unk_vector = torch.mean(0).unsqueeze(0)
 
 
 def to_polyglot(token):
