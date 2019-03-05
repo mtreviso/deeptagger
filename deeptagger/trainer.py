@@ -53,7 +53,7 @@ class Trainer:
         start_time = time.time()
         for epoch in range(self.current_epoch, self.epochs + 1):
             logging.info('Epoch {} of {}'.format(epoch, self.epochs))
-            
+
             self.reporter.set_epoch(epoch)
             self.current_epoch = epoch
 
