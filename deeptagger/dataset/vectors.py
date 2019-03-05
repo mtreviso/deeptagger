@@ -9,13 +9,13 @@ from deeptagger.constants import UNK, PAD, START, STOP
 
 class WordEmbeddings(Vectors):
 
-    def __init__(self, name, emb_format='polyglot', binary=True,
+    def __init__(self, name, emb_format='polyglot', binary=False,
                  map_fn=lambda x: x, save_vectors=False, **kwargs):
         """
         Arguments:
            emb_format: the saved embedding model format, choices are:
                        polyglot, word2vec, fasttext and glove
-           binary: only for word2vec and fasttext
+           binary: wheter the saved emb file is in binary
            map_fn: a function that maps special original tokens
                        to Polyglot tokens (e.g. <eos> to </S>)
            save_vectors: save a vectors cache

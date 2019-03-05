@@ -50,10 +50,11 @@ class Trainer:
         self.reporter = Reporter(options.output_dir, options.tensorboard)
 
     def train(self):
-
         start_time = time.time()
         for epoch in range(self.current_epoch, self.epochs + 1):
             logging.info('Epoch {} of {}'.format(epoch, self.epochs))
+            
+            self.reporter.set_epoch(epoch)
             self.current_epoch = epoch
 
             # Train a single epoch
@@ -114,38 +115,13 @@ class Trainer:
 
     def train_epoch(self):
         self.reporter.set_mode('train')
-        self.reporter.set_epoch(self.current_epoch)
         self.train_stats.reset()
-        self.scheduler.step()
-        self.model.train()
-
-        indexes = []
-        for i, batch in enumerate(self.train_iter, start=1):
-            indexes.extend(batch.words)
-
-            # basic training steps
-            self.model.zero_grad()
-            pred = self.model(batch)
-            loss = self.model.loss(pred, batch.tags)
-            loss.backward()
-            self.optimizer.step()
-
-            # keep stats object updated
-            self.train_stats.update(loss.item(), pred, batch.tags)
-
-            # report current loss to the user
-            acum_loss = self.train_stats.get_loss()
-            self.reporter.report_progress(i, len(self.train_iter), acum_loss)
-
-        inv_vocab = self.train_iter.dataset.fields['words'].vocab.itos
-        words = indexes_to_words(indexes, inv_vocab)
-        self.train_stats.calc(self.current_epoch, words)
+        self._train()
         self.train_stats_history.append(self.train_stats.to_dict())
         self.reporter.report_stats(self.train_stats.to_dict())
 
     def dev_epoch(self):
         self.reporter.set_mode('dev')
-        self.reporter.set_epoch(self.current_epoch)
         self.dev_stats.reset()
         self._eval(self.dev_iter, self.dev_stats)
         self.dev_stats_history.append(self.dev_stats.to_dict())
@@ -153,29 +129,53 @@ class Trainer:
 
     def test_epoch(self):
         self.reporter.set_mode('test')
-        self.reporter.set_epoch(self.current_epoch)
         self.test_stats.reset()
         self._eval(self.test_iter, self.test_stats)
         self.test_stats_history.append(self.test_stats.to_dict())
         self.reporter.report_stats(self.test_stats.to_dict())
 
+    def _train(self):
+        self.scheduler.step()
+        self.model.train()
+        indexes = []
+        for i, batch in enumerate(self.train_iter, start=1):
+            indexes.extend(batch.words)
+
+            # basic training steps:
+            self.model.zero_grad()
+            pred = self.model(batch)
+            loss = self.model.loss(pred, batch.tags)
+            loss.backward()
+            self.optimizer.step()
+
+            # keep stats object updated:
+            self.train_stats.update(loss.item(), pred, batch.tags)
+
+            # report current loss to the user:
+            acum_loss = self.train_stats.get_loss()
+            self.reporter.report_progress(i, len(self.train_iter), acum_loss)
+
+        inv_vocab = self.train_iter.dataset.fields['words'].vocab.itos
+        words = indexes_to_words(indexes, inv_vocab)
+        self.train_stats.calc(self.current_epoch, words)
+
     def _eval(self, ds_iterator, stats):
         self.model.eval()
-
         indexes = []
         with torch.no_grad():
             for i, batch in enumerate(ds_iterator, start=1):
                 indexes.extend(batch.words)
 
-                # basic prediction steps
+                # basic prediction steps:
                 pred = self.model(batch)
                 loss = self.model.loss(pred, batch.tags)
 
-                # keep stats object updated
+                # keep stats object updated:
                 stats.update(loss.item(), pred, batch.tags)
 
-                # report current loss to the user
-                self.reporter.report_progress(i, len(ds_iterator), loss.item())
+                # report current loss to the user:
+                acum_loss = stats.get_loss()
+                self.reporter.report_progress(i, len(ds_iterator), acum_loss)
 
         inv_vocab = ds_iterator.dataset.fields['words'].vocab.itos
         words = indexes_to_words(indexes, inv_vocab)

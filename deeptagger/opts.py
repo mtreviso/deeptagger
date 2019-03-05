@@ -112,7 +112,7 @@ def preprocess_opts(parser):
                        type=int,
                        default=1,
                        help='Min word frequency for vocabulary.')
-    group.add_argument('--keep-rare-with-embedding',
+    group.add_argument('--keep-rare-with-vectors',
                        action='store_true',
                        help='Keep words that occur less then min-frequency '
                             'but are in embeddings vocabulary.')
@@ -188,10 +188,10 @@ def model_opts(parser):
                        type=str,
                        default='same',
                        choices=['same', 'balanced'],
-                       help='Weights for penalize each class '
+                       help='Weights to penalize each class '
                             'in loss calculation. `same` will give each class '
                             'the same weights. `balanced` will give more '
-                            'weight for minority classes.')
+                            'weight to minority classes.')
     group.add_argument('--hidden-size',
                        type=int,
                        nargs='+',

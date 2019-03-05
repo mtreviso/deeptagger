@@ -44,7 +44,7 @@ def build_vocabs(fields_tuples, train_dataset, all_datasets, options):
         vectors=vectors,
         max_size=options.vocab_size,
         min_freq=options.vocab_min_frequency,
-        keep_rare_with_vectors=options.keep_rare_with_embedding,
+        keep_rare_with_vectors=options.keep_rare_with_vectors,
         add_vectors_vocab=options.add_embeddings_vocab
     )
     tags_field.build_vocab(*all_datasets)
