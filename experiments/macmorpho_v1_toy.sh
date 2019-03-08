@@ -2,14 +2,14 @@
 cd ..
 python3 -m deeptagger train \
                       --model "rcnn" \
-                      --rnn-type "lstm" \
+                      --rnn-type "gru" \
                       --bidirectional \
                       --train-path "data/corpus/pt/macmorpho_v1_toy/train.txt" \
                       --dev-path "data/corpus/pt/macmorpho_v1_toy/dev.txt" \
                       --test-path "data/corpus/pt/macmorpho_v1_toy/test.txt" \
                       --del-word " " \
                       --del-tag "_" \
-                      --output-dir "runs/testing-macmorpho_v1_toy/" \
+                      --output-dir "runs/macmorpho_v1_toy_rcnn_embs/" \
                       --train-batch-size 128 \
                       --dev-batch-size 128 \
                       --optimizer "adam" \
@@ -21,15 +21,19 @@ python3 -m deeptagger train \
                       --use-prefixes \
                       --use-suffixes \
                       --use-caps \
-                      --save "saved-models/testing-toy-save/" \
-                      --tensorboard
+                      --save "saved-models/macmorpho_v1_toy_rcnn_ebs/" \
+                      --embeddings-format "fonseca" \
+                      --embeddings-path "data/pretrained-embeddings/fonseca/"
+                      # --tensorboard \
                       # --amsgrad \
+                      # --embeddings-format "fasttext" \
+                      # --embeddings-path "data/pretrained-embeddings/fasttext/skip_s300.txt" \
+                      # --add-embeddings-vocab \
+                      # --keep-rare-with-vectors
+                      # --lr-step-decay noam \
                       # --nesterov \
                       # --momentum 0.9 \
-                      # --lr-step-decay noam \
                       # --warmup-steps 2000 \
                       # --scheduler "exponential" \
                       # --gamma 0.1 \
-                      # --embeddings-format "polyglot" \
-                      # --embeddings-path "data/embeddings/polyglot/pt/embeddings_pkl.tar.bz2" \
-                      # --add-embeddings-vocab \
+                      

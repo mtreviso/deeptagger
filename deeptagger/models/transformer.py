@@ -157,6 +157,7 @@ class Transformer(nn.Module):
         target_vocab_size,
         nb_layers=6,
         hidden_size=512,
+        attn_hidden_size=256,
         ff_hidden_size=2048,
         nb_heads=8,
         max_seq_len=5000,
@@ -178,7 +179,7 @@ class Transformer(nn.Module):
             query_size,
             key_size,
             value_size,
-            hidden_size,
+            attn_hidden_size,
             dropout=dropout_attention,
         )
         encoder_ff = PositionwiseFeedForward(hidden_size, ff_hidden_size)
@@ -196,7 +197,7 @@ class Transformer(nn.Module):
             query_size,
             key_size,
             value_size,
-            hidden_size,
+            attn_hidden_size,
             dropout=dropout_attention,
         )
         decoder_source_scorer = DotProductScorer()
@@ -206,7 +207,7 @@ class Transformer(nn.Module):
             query_size,
             key_size,
             value_size,
-            hidden_size,
+            attn_hidden_size,
             dropout=dropout_attention,
         )
         decoder_ff = PositionwiseFeedForward(hidden_size, ff_hidden_size)
@@ -298,6 +299,7 @@ if __name__ == '__main__':
                         nb_layers = 1,
                         ff_hidden_size = 12,
                         nb_heads = 2,
+                        attn_hidden_size = 18,
                         max_seq_len = 100,
                         dropout_encoder = 0.1,
                         dropout_decoder = 0.1,

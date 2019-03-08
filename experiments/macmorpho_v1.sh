@@ -17,7 +17,7 @@ python3 -m deeptagger train \
 					  --train-batch-size 128 \
 					  --dev-batch-size 128 \
 					  --epochs 20 \
-					  --optimizer "adabound" \
+					  --optimizer "adam" \
 					  --save-best-only \
 					  --early-stopping-patience 5 \
 					  --restore-best-model \
