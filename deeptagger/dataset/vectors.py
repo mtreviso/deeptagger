@@ -32,8 +32,10 @@ class WordEmbeddings(Vectors):
         super().__init__(name, **kwargs)
 
     def __getitem__(self, token):
-        if token in self.stoi:
-            token = self.map_fn(token)
+        mapped_token = self.map_fn(token)
+        if mapped_token in self.stoi:
+            return self.vectors[self.stoi[mapped_token]]
+        elif token in self.stoi:
             return self.vectors[self.stoi[token]]
         elif self.unk_vector is not None:
             return self.unk_vector.clone()

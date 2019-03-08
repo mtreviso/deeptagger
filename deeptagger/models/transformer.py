@@ -18,9 +18,9 @@ class TransformerAttention(nn.Module):
     def __init__(self, attn, dropout=0.0):
         super().__init__()
         self.attn = attn
-        self.proj = nn.Linear(attn.hidden_size, attn.hidden_size)
+        self.proj = nn.Linear(attn.hidden_size, attn.value_size)
         self.dropout = nn.Dropout(dropout)
-        self.norm = LayerNorm(attn.hidden_size)
+        self.norm = LayerNorm(attn.value_size)
 
     def forward(self, x, memory=None, mask=None):
         if memory is None:
@@ -239,8 +239,6 @@ class Transformer(nn.Module):
         for p in self.parameters():
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
-            else:
-                nn.init.zeros_(p)
 
     def encode(self, src, src_mask):
         src_emb = self.encoder_emb(src)
@@ -268,7 +266,7 @@ if __name__ == '__main__':
     import torch
     from deeptagger.models.utils import sequence_mask, subsequent_mask
 
-    # torch.manual_seed(1)
+    torch.manual_seed(1)
     # torch.cuda.manual_seed(1)
 
     batch_size = 8
@@ -286,7 +284,7 @@ if __name__ == '__main__':
     target_mask_valid = subsequent_mask(target_len)
 
     # broadcast at timestep dim is infered automatically by attention module
-    # or you can set manual by: source_mask.unsqueeze(-2)
+    # or you can set manually by: source_mask.unsqueeze(-2)
     source_mask = source_mask
     target_mask = target_mask_pad.unsqueeze(-2) & target_mask_valid.unsqueeze(0)
 

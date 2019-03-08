@@ -45,6 +45,7 @@ class MultiHeadedAttention(nn.Module):
         self.hidden_size = hidden_size
         self.nb_heads = nb_heads
         self.heads_size = hidden_size // nb_heads
+        self.value_size = value_size
 
         self.proj_queries = nn.Linear(query_size, hidden_size)
         self.proj_keys = nn.Linear(key_size, hidden_size)
