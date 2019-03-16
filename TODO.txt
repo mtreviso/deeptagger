@@ -48,14 +48,19 @@ Model:
 			vocab = fields['word'].vocab
 			vai ter um pequeno overhead pq toda época precisamos remapear a entrada
 			para o espaço das representações, massssss, o torchtext já numericaliza os
-			batches todas as vezes de qualquer maneira, então não vai mudar muita coisa
+			batches todas as vezes de qualquer maneira, então não vai mudar muita coisa:
+			o treino vai demorar uns 5 segundos a mais por época, o que acaba dando uns +/- 5mins a mais
+			dependendo do numero de épocas e do tamanhos das sentenças
 
 		_init_weights
-		map: word ids to a
 		get_offsets: 
 			- None for normal tokenization
 			- [ids] for subword units
-		forward: (bs, seq_len) -> (bs, rep_seq_len, rep_size) -> (bs, seq_len, rep_size)
+		forward: (bs, seq_len) -> (bs, rep_seq_len, rep_size) if keep_subword_units is True
+							   -> (bs, seq_len, rep_size) otherwise
+
+			 if keep_subword_units is False (default):
+			      output = output[self.get_offsets(input)]
 		load
 		save
 		freeze
@@ -63,14 +68,19 @@ Model:
 	Body:
 		__init__: options
 		_init_weights
-		forward: (bs, seq_len, rep_size) -> (bs, seq_len, hidden_size)
+		forward: (bs, seq_len*, rep_size) -> (bs, seq_len*, hidden_size)
 		load
 		save
 		freeze
 
 	Head:
 		__init__: options
-		forward: (bs, seq_len, hidden_size) -> (bs, seq_len, nb_classes)
+		forward: (bs, rep_seq_len, hidden_size) if keep_subword_units is True
+		         (bs, seq_len*, hidden_size) otherwise
+		         -> (bs, seq_len, nb_classes)
+
+		         if keep_word_units is True:
+		         	output = output[representation.get_offsets(input)]
 		_init_weights
 		load
 		save
