@@ -8,8 +8,8 @@ python3 -m deeptagger train \
 					  --test-path "data/corpus/pt/macmorpho_v1_toy/test.txt" \
 					  --del-word " " \
 					  --del-tag "_" \
-					  --embeddings-format "polyglot" \
-					  --embeddings-path "data/embeddings/polyglot/pt/embeddings_pkl.tar.bz2" \
+					  --embeddings-format "fonseca" \
+                      --embeddings-path "data/pretrained-embeddings/fonseca/" \
 					  --output-dir "runs/testing-macmorpho_v1_toy/" \
 					  --train-batch-size 128 \
 					  --dev-batch-size 128 \

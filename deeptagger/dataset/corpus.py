@@ -28,54 +28,7 @@ class Corpus:
         self.nb_examples = 0
         # mapping from attr name to their index in the list
         names, _ = zip(*self.attr_fields)
-        self.attr_index = dict(zip(names, range(len(names))))
-        self.fields_examples = [[] for _ in range(len(self.attr_index))]
-
-    def add_texts(self, texts):
-        """
-        Add a list of texts to the corpus.
-        :param texts: just a string where tokens are separated by a single
-                      space or a list of strings to add more than one text
-        """
-        if not isinstance(texts, (list, tuple)):
-            texts = [texts]
-        texts = list(map(self._normalize, texts))
-        self.fields_examples[self.attr_index['words']] = texts
-        self.nb_examples += len(texts)
-
-    def add_features(self,
-                     features_fields_tuples,
-                     prefix_min_length=1,
-                     prefix_max_length=5,
-                     suffix_min_length=1,
-                     suffix_max_length=5):
-        """
-        Add features in features_field_tuples. Accepted features are:
-        prefixes, suffixes and caps
-        :param features_fields_tuples: the same as fields_tuples but it
-                                       represents optional features
-
-        :param prefix_min_length: min length for prefixes
-        :param prefix_max_length: max length for prefixes
-        :param suffix_min_length: min length for suffixes
-        :param suffix_max_length: max length for suffixes
-        :return:
-        """
-        new_examples = [[] for _ in range(len(features_fields_tuples))]
-        self.fields_examples.extend(new_examples)
-        words = self.fields_examples[self.attr_index['words']]
-        if 'prefixes' in self.attr_index:
-            prefixes = extract_prefixes(words,
-                                        prefix_min_length,
-                                        prefix_max_length)
-            self.fields_examples[self.attr_index['prefixes']] = prefixes
-        if 'suffixes' in self.attr_index:
-            suffixes = extract_suffixes(words,
-                                        suffix_min_length,
-                                        suffix_max_length)
-            self.fields_examples[self.attr_index['suffixes']] = suffixes
-        if 'caps' in self.attr_index:
-            self.fields_examples[self.attr_index['caps']] = extract_caps(words)
+        self.fields_examples = {name: [] for name in names}
 
     def read(self, filepath):
         """
@@ -110,19 +63,17 @@ class Corpus:
                 words_for_example.append(self._normalize(' '.join(words)))
                 tags_for_example.append(' '.join(tags))
         # add words and tags examples
-        self.fields_examples[self.attr_index['words']] = words_for_example
-        if 'tags' in self.attr_index:
-            self.fields_examples[self.attr_index['tags']] = tags_for_example
-        # then add each corresponding sentence from each field
-        nb_lines = [len(fe) for fe in self.fields_examples if fe]
+        self.fields_examples['words'] = words_for_example
+        self.fields_examples['tags'] = tags_for_example
         # assert files have the same size
+        nb_lines = [len(fe) for fe in self.fields_examples.values() if fe]
         assert min(nb_lines) == max(nb_lines)
         self.nb_examples = nb_lines[0]
 
     def __iter__(self):
         for j in range(self.nb_examples):
-            fields_values_for_example = [self.fields_examples[i][j]
-                                         for i in range(len(self.attr_fields))]
+            fields_values_for_example = [self.fields_examples[k][j]
+                                         for k in self.fields_examples.keys()]
             yield data.Example.fromlist(fields_values_for_example,
                                         self.attr_fields)
 
@@ -140,3 +91,43 @@ class Corpus:
         # t = Cleaner.fix_quotes(t)
         # t = Cleaner.fix_mistyped_tokens(t)
         return t
+
+    def add_texts(self, texts):
+        """
+        Add a list of texts to the corpus.
+        :param texts: just a string where tokens are separated by a single
+                      space or a list of strings to add more than one text
+        """
+        if not isinstance(texts, (list, tuple)):
+            texts = [texts]
+        texts = [self._normalize(t) for t in texts]
+        self.fields_examples['words'] = texts
+        self.nb_examples += len(texts)
+
+    def add_features(self,
+                     prefix_min_length=1,
+                     prefix_max_length=5,
+                     suffix_min_length=1,
+                     suffix_max_length=5):
+        """
+        Add features in features_field_tuples. Accepted features are:
+        prefixes, suffixes and caps
+        :param prefix_min_length: min length for prefixes
+        :param prefix_max_length: max length for prefixes
+        :param suffix_min_length: min length for suffixes
+        :param suffix_max_length: max length for suffixes
+        :return:
+        """
+        words = self.fields_examples['words']
+        if 'prefixes' in self.fields_examples:
+            prefixes = extract_prefixes(words,
+                                        prefix_min_length,
+                                        prefix_max_length)
+            self.fields_examples['prefixes'] = prefixes
+        if 'suffixes' in self.fields_examples:
+            suffixes = extract_suffixes(words,
+                                        suffix_min_length,
+                                        suffix_max_length)
+            self.fields_examples['suffixes'] = suffixes
+        if 'caps' in self.fields_examples:
+            self.fields_examples['caps'] = extract_caps(words)

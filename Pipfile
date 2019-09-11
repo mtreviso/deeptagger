@@ -10,6 +10,7 @@ torchtext = "*"
 adabound = "*"
 pytest = "*"
 deeptagger = {editable = true,path = "."}
+urllib3 = "*"
 
 [dev-packages]
 "flake8" = "==3.5.0"

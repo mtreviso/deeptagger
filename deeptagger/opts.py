@@ -119,7 +119,7 @@ def preprocess_opts(parser):
     group.add_argument('--add-embeddings-vocab',
                        action='store_true',
                        help='Add words from embeddings vocabulary to '
-                            'source/target vocabulary.')
+                            'the true vocabulary.')
 
     # Embeddings options
     group = parser.add_argument_group('data-embeddings')

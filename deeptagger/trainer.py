@@ -50,6 +50,16 @@ class Trainer:
         self.reporter = Reporter(options.output_dir, options.tensorboard)
 
     def train(self):
+        # Perform an evaluation on dev set if it is available
+        if self.dev_iter is not None:
+            logging.info('Evaluating before training...')
+            self.dev_epoch()
+
+        # Perform an evaluation on test set if it is available
+        if self.test_iter is not None:
+            logging.info('Testing before training...')
+            self.test_epoch()
+
         start_time = time.time()
         for epoch in range(self.current_epoch, self.epochs + 1):
             logging.info('Epoch {} of {}'.format(epoch, self.epochs))

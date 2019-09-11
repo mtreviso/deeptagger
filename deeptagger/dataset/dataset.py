@@ -8,11 +8,11 @@ def build(path, fields_tuples, options):
         return options.min_length <= len(x.words) <= options.max_length
     corpus = Corpus(fields_tuples, options.del_word, options.del_tag)
     corpus.read(path)
-    feature_fields = list(filter(lambda x: x[0] not in ['words', 'tags'],
-                                 fields_tuples))
-    if feature_fields:
-        corpus.add_features(feature_fields,
-                            options.prefix_min_length,
+
+    if (options.use_prefixes or
+            options.use_suffixes or
+            options.use_caps):
+        corpus.add_features(options.prefix_min_length,
                             options.prefix_max_length,
                             options.suffix_min_length,
                             options.suffix_max_length)
@@ -22,11 +22,10 @@ def build(path, fields_tuples, options):
 def build_texts(texts, fields_tuples, options):
     corpus = Corpus(fields_tuples)
     corpus.add_texts(texts)
-    feature_fields = list(filter(lambda x: x[0] not in ['words', 'tags'],
-                                 fields_tuples))
-    if feature_fields:
-        corpus.add_features(feature_fields,
-                            options.prefix_min_length,
+    if (options.use_prefixes or
+            options.use_suffixes or
+            options.use_caps):
+        corpus.add_features(options.prefix_min_length,
                             options.prefix_max_length,
                             options.suffix_min_length,
                             options.suffix_max_length)
