@@ -6,8 +6,8 @@ from deeptagger import constants
 from deeptagger import opts
 from deeptagger.modules.optim.step_decay_optimizer import StepDecayOptimizer
 from deeptagger.modules.optim.lr_scheduler import (NoamDecayScheduler,
-                                                 ExpDecayScheduler,
-                                                 RsqrtDecayScheduler)
+                                                   ExpDecayScheduler,
+                                                   RsqrtDecayScheduler)
 
 available_optimizers = {
     'adam': torch.optim.Adam,

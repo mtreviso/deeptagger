@@ -1,3 +1,5 @@
+import math
+
 from torch import nn
 
 from deeptagger.modules.positional_encoding import PositionalEncoding
