@@ -1,6 +1,5 @@
-from torchtext.data import Dataset
-
 from deeptagger.dataset.corpus import Corpus
+from deeptagger.dataset.modules.dataset import LazyDataset
 
 
 def build(path, fields_tuples, options):
@@ -32,7 +31,7 @@ def build_texts(texts, fields_tuples, options):
     return PoSDataset(corpus)
 
 
-class PoSDataset(Dataset):
+class PoSDataset(LazyDataset):
     """Defines a dataset for PoS Tagging."""
 
     @staticmethod

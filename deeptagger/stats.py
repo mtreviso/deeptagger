@@ -41,11 +41,11 @@ class Stats(object):
         self.acc_sent = None
 
         # this attrs will be se when calc method is called
-        self.best_acc = BestValueEpoch(value=0, epoch=0)
-        self.best_acc_oov = BestValueEpoch(value=0, epoch=0)
-        self.best_acc_emb = BestValueEpoch(value=0, epoch=0)
-        self.best_acc_sent = BestValueEpoch(value=0, epoch=0)
-        self.best_loss = BestValueEpoch(value=np.Inf, epoch=0)
+        self.best_acc = BestValueEpoch(value=0, epoch=1)
+        self.best_acc_oov = BestValueEpoch(value=0, epoch=1)
+        self.best_acc_emb = BestValueEpoch(value=0, epoch=1)
+        self.best_acc_sent = BestValueEpoch(value=0, epoch=1)
+        self.best_loss = BestValueEpoch(value=np.Inf, epoch=1)
 
         # private (used for lazy calculation)
         self._flattened_preds = None

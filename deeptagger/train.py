@@ -12,6 +12,8 @@ from deeptagger.trainer import Trainer
 
 
 def run(options):
+    logging.info('Running with options: {}'.format(options))
+
     words_field = fields.WordsField()
     tags_field = fields.TagsField()
     fields_tuples = [('words', words_field), ('tags', tags_field)]

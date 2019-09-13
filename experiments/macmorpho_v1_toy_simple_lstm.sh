@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-cd ..
+#cd ..
 python3 -m deeptagger train \
                       --model simple_lstm \
                       --bidirectional \

@@ -33,7 +33,7 @@ class Model(torch.nn.Module):
 
     @property
     def nb_classes(self):
-        return len(self.tags_field.vocab.stoi)
+        return len(self.tags_field.vocab.stoi) - 1  # remove pad index
 
     def loss(self, pred, gold):
         # (bs*ts, nb_classes)
@@ -57,7 +57,7 @@ class Model(torch.nn.Module):
         return torch.exp(pred)  # assume log softmax in the output
 
     def predict_classes(self, batch):
-        _, classes = torch.max(self.predict_proba(batch), -1)
+        classes = torch.argmax(self.predict_proba(batch), -1)
         return classes
 
     def load(self, path):

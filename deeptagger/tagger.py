@@ -82,6 +82,10 @@ class Tagger:
         options.update(kwargs)
         options = Namespace(**options)
 
+        # fix the case when the hidden_size is passed as a function's arg
+        if not isinstance(options.hidden_size, list):
+            options.hidden_size = [options.hidden_size]
+
         # configure stuff
         options.gpu_id = self.gpu_id
         options.output_dir = config_utils.configure_output(options.output_dir)
@@ -92,11 +96,11 @@ class Tagger:
         self.options = options
 
         # train!
-        fields_tuples, model, optimizer, scheduler = train.run(self.options)
+        fields_tuples, model, optim, sched = train.run(self.options)
         self.fields_tuples = fields_tuples
         self.model = model
-        self.optimizer = optimizer
-        self.scheduler = scheduler
+        self.optimizer = optim
+        self.scheduler = sched
 
         # the tagger can be considered loaded
         self._loaded = True

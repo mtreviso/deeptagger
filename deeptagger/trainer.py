@@ -84,11 +84,10 @@ class Trainer:
                 logging.info('Testing...')
                 self.test_epoch()
 
-            # Only save if an improvement occurred
-            if self.save_best_only:
+            # Only save if an improvement has occurred
+            if self.save_best_only and self.dev_iter is not None:
                 if self.dev_stats.best_acc.epoch == epoch:
-                    logging.info('Accuracy improved '
-                                 'on epoch {}'.format(epoch))
+                    logging.info('F1 improved on epoch {}'.format(epoch))
                     self.save(epoch)
             else:
                 # Otherwise, save if a checkpoint was reached
@@ -97,7 +96,7 @@ class Trainer:
                     self.save(epoch)
 
             # Stop training before the total number of epochs
-            if self.early_stopping_patience > 0:
+            if self.early_stopping_patience > 0 and self.dev_iter is not None:
                 # Only stop if the desired patience epochs was reached
                 passed_epochs = epoch - self.dev_stats.best_acc.epoch
                 if passed_epochs == self.early_stopping_patience:
@@ -145,7 +144,6 @@ class Trainer:
         self.reporter.report_stats(self.test_stats.to_dict())
 
     def _train(self):
-        self.scheduler.step()
         self.model.train()
         indexes = []
         for i, batch in enumerate(self.train_iter, start=1):
@@ -168,6 +166,9 @@ class Trainer:
         inv_vocab = self.train_iter.dataset.fields['words'].vocab.itos
         words = indexes_to_words(indexes, inv_vocab)
         self.train_stats.calc(self.current_epoch, words)
+
+        # scheduler.step() after training
+        self.scheduler.step()
 
     def _eval(self, ds_iterator, stats):
         self.model.eval()
