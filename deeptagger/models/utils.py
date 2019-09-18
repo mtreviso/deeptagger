@@ -19,15 +19,24 @@ def indexes_to_words(indexes, itos):
     return words
 
 
-def unmask(tensor, mask):
+def unmask(tensor, mask, is_words_mask=False):
     """
     Unmask a tensor and convert it back to a list of lists.
+
     :param tensor: a torch.tensor object
     :param mask: a torch.tensor object with 1 indicating a valid position
                  and 0 elsewhere
+    :param is_words_mask: whether the mask was calculated using words (True)
+    or tags (False)
     :return: a list of lists with variable length
     """
-    lengths = mask.int().sum(dim=-1).tolist()
+    lengths = mask.int().sum(dim=-1)
+    # if the mask was calculated using words, then we subtract 2
+    # in order to remove the size of the <bos> and <eos> tokens
+    # which are already removed from the tensor in the forward pass
+    if is_words_mask:
+        lengths -= 2
+    lengths = lengths.tolist()
     return [x[:lengths[i]].tolist() for i, x in enumerate(tensor)]
 
 
@@ -108,29 +117,36 @@ def make_mergeable_tensors(t1, t2):
     return new_t1, new_t2
 
 
-def apply_packed_sequence(rnn, embedding, lengths):
+def apply_packed_sequence(rnn, padded_sequences, lengths, hidden=None):
     """
-    Code from Unbabel OpenKiwi
+    Code adapted from Unbabel OpenKiwi
 
     Runs a forward pass of embeddings through an rnn using packed sequence.
     Args:
        rnn: The RNN that that we want to compute a forward pass with.
-       embedding (FloatTensor b x seq x dim): A batch of sequence embeddings.
+       padded_sequences (FloatTensor b x seq x dim): A batch of sequence seqs.
        lengths (LongTensor batch): The length of each sequence in the batch.
-
+       hidden (FloatTensor, optional): hidden state for the rnn.
     Returns:
        output: The output of the RNN `rnn` with input `embedding`
     """
     # Sort Batch by sequence length
+    total_length = padded_sequences.size(1)  # Get the max sequence length
     lengths_sorted, permutation = torch.sort(lengths, descending=True)
-    embedding_sorted = embedding[permutation]
+    padded_sequences_sorted = padded_sequences[permutation]
 
     # Use Packed Sequence
-    embedding_packed = pack(embedding_sorted, lengths_sorted, batch_first=True)
-    outputs_packed, _ = rnn(embedding_packed)
-    outputs_sorted, _ = unpack(outputs_packed, batch_first=True)
+    embedding_packed = pack(
+        padded_sequences_sorted, lengths_sorted, batch_first=True
+    )
+    outputs_packed, hidden = rnn(embedding_packed, hidden)
+    outputs_sorted, _ = unpack(
+        outputs_packed, batch_first=True, total_length=total_length
+    )
 
     # Restore original order
     _, permutation_rev = torch.sort(permutation, descending=False)
     outputs = outputs_sorted[permutation_rev]
-    return outputs
+    hidden[0] = hidden[0][permutation_rev]
+    hidden[1] = hidden[1][permutation_rev]
+    return outputs, hidden

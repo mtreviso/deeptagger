@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from deeptagger import constants
+from deeptagger.initialization import init_kaiming, init_xavier
 from deeptagger.models.model import Model
 
 
@@ -20,12 +21,9 @@ class CNN(Model):
         self.relu = None
         self.sigmoid = None
 
-    def build(self, options):
-        loss_weights = None
-        if options.loss_weights == 'balanced':
-            # TODO
-            # loss_weights = calc_balanced(loss_weights, tags_field)
-            loss_weights = torch.FloatTensor(loss_weights)
+    def build(self, options, loss_weights=None):
+        if loss_weights is not None:
+            loss_weights = torch.tensor(loss_weights).float()
 
         word_embeddings = None
         if self.words_field.vocab.vectors is not None:
@@ -66,10 +64,10 @@ class CNN(Model):
         self.is_built = True
 
     def init_weights(self):
-        torch.nn.init.xavier_uniform_(self.cnn_1d.weight)
-        torch.nn.init.constant_(self.cnn_1d.bias, 0.)
-        torch.nn.init.xavier_uniform_(self.linear_out.weight)
-        torch.nn.init.constant_(self.linear_out.bias, 0.)
+        if self.cnn_1d is not None:
+            init_kaiming(self.cnn_1d, dist='uniform', nonlinearity='relu')
+        if self.linear_out is not None:
+            init_xavier(self.linear_out, dist='uniform')
 
     def forward(self, batch):
         assert self.is_built

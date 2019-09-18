@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 
 from deeptagger.stats import BestValueEpoch
 
@@ -24,16 +23,11 @@ class Reporter:
     def __init__(self, output_dir, use_tensorboard):
         self.tb_writer = None
         if use_tensorboard:
-            try:
-                from tensorboardX import SummaryWriter
-            except ImportError:
-                logging.error('Please install `tensorboardx` package first. '
-                              'See `tensorboard` section in README.md '
-                              'for more information on tensorboard logging.')
-            self.tb_writer = SummaryWriter(output_dir)
             logging.info('Starting tensorboard logger...')
             logging.info('Type `tensorboard --logdir runs/` in your terminal '
-                         'to see live stats (`tensorflow` package required).')
+                         'to see live stats.')
+            from torch.utils.tensorboard import SummaryWriter
+            self.tb_writer = SummaryWriter(output_dir)
         self.mode = None
         self.epoch = None
         self.output_dir = output_dir
@@ -63,26 +57,27 @@ class Reporter:
     def show_footer(self):
         logging.info(self.template_footer)
 
-    def show_stats(self, stats_dict):
-        logging.info(
-            self.template_body.format(
-                stats_dict['loss'],
-                stats_dict['best_loss'].value,
-                stats_dict['best_loss'].epoch,
-                stats_dict['acc'],
-                stats_dict['best_acc'].value,
-                stats_dict['best_acc'].epoch,
-                stats_dict['acc_oov'],
-                stats_dict['best_acc_oov'].value,
-                stats_dict['best_acc_oov'].epoch,
-                stats_dict['acc_emb'],
-                stats_dict['best_acc_emb'].value,
-                stats_dict['best_acc_emb'].epoch,
-                stats_dict['acc_sent'],
-                stats_dict['best_acc_sent'].value,
-                stats_dict['best_acc_sent'].epoch
-            )
+    def show_stats(self, stats_dict, epoch=None):
+        text = self.template_body.format(
+            stats_dict['loss'],
+            stats_dict['best_loss'].value,
+            stats_dict['best_loss'].epoch,
+            stats_dict['acc'],
+            stats_dict['best_acc'].value,
+            stats_dict['best_acc'].epoch,
+            stats_dict['acc_oov'],
+            stats_dict['best_acc_oov'].value,
+            stats_dict['best_acc_oov'].epoch,
+            stats_dict['acc_emb'],
+            stats_dict['best_acc_emb'].value,
+            stats_dict['best_acc_emb'].epoch,
+            stats_dict['acc_sent'],
+            stats_dict['best_acc_sent'].value,
+            stats_dict['best_acc_sent'].epoch
         )
+        if epoch is not None:
+            text += '< Ep. {}'.format(epoch)
+        logging.info(text)
 
     def report_progress(self, i, nb_iters, loss):
         print('Loss ({}/{}): {:.4f}'.format(i, nb_iters, loss), end='\r')
@@ -102,14 +97,14 @@ class Reporter:
                 mode_metric = '{}/{}'.format(self.mode, metric)
                 self.tb_writer.add_scalar(mode_metric, value, self.epoch)
 
-    def report_stats_history(self, stats_history):
+    def report_stats_history(self, stats_history, start=1):
         self.show_head()
-        for stats_dict in stats_history:
-            self.show_stats(stats_dict)
+        for i, stats_dict in enumerate(stats_history, start=start):
+            self.show_stats(stats_dict, epoch=i)
         self.show_footer()
 
     def close(self):
         if self.tb_writer is not None:
-            all_scalars_path = Path(self.output_dir, 'all_scalars.json')
-            self.tb_writer.export_scalars_to_json(str(all_scalars_path))
+            # all_scalars_path = Path(self.output_dir, 'all_scalars.json')
+            # self.tb_writer.export_scalars_to_json(str(all_scalars_path))
             self.tb_writer.close()

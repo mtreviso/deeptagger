@@ -17,8 +17,16 @@ class Predicter:
             for batch in self.dataset_iter:
                 mask = batch.words != constants.PAD_ID
                 if pred_type == 'classes':
-                    pred = unmask(self.model.predict_classes(batch), mask)
+                    preds = unmask(
+                        self.model.predict_classes(batch),
+                        mask,
+                        is_words_mask=True
+                    )
                 else:
-                    pred = unmask(self.model.predict_proba(batch), mask)
-                predictions.extend(pred)
+                    preds = unmask(
+                        self.model.predict_proba(batch),
+                        mask,
+                        is_words_mask=True
+                    )
+                predictions.extend(preds)
         return predictions

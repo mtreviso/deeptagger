@@ -53,11 +53,13 @@ class Trainer:
         # Perform an evaluation on dev set if it is available
         if self.dev_iter is not None:
             logging.info('Evaluating before training...')
+            self.reporter.set_epoch(0)
             self.dev_epoch()
 
         # Perform an evaluation on test set if it is available
         if self.test_iter is not None:
             logging.info('Testing before training...')
+            self.reporter.set_epoch(0)
             self.test_epoch()
 
         start_time = time.time()
@@ -116,10 +118,14 @@ class Trainer:
             self.reporter.report_stats_history(self.train_stats_history)
             if self.dev_iter:
                 logging.info('Dev final report: ')
-                self.reporter.report_stats_history(self.dev_stats_history)
+                self.reporter.report_stats_history(
+                    self.dev_stats_history, start=0
+                )
             if self.test_iter:
                 logging.info('Test final report: ')
-                self.reporter.report_stats_history(self.test_stats_history)
+                self.reporter.report_stats_history(
+                    self.test_stats_history, start=0
+                )
         self.reporter.close()
 
     def train_epoch(self):

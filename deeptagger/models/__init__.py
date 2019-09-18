@@ -17,7 +17,7 @@ available_models = {
 }
 
 
-def build(options, fields_tuples):
+def build(options, fields_tuples, loss_weights):
     # dict_fields returns None if a field doesnt exist
     dict_fields = defaultdict(lambda: None)
     dict_fields.update(dict(fields_tuples))
@@ -27,7 +27,7 @@ def build(options, fields_tuples):
                         prefixes_field=dict_fields['prefixes'],
                         suffixes_field=dict_fields['suffixes'],
                         caps_field=dict_fields['caps'])
-    model.build(options)
+    model.build(options, loss_weights)
     if options.gpu_id is not None:
         model = model.cuda(options.gpu_id)
     return model
@@ -40,7 +40,14 @@ def load_state(path, model):
 
 def load(path, fields_tuples):
     options = opts.load(path)
-    model = build(options, fields_tuples)
+
+    # set dummy loss_weights (the correct values are going to be loaded)
+    tags_field = dict(fields_tuples)['tags']
+    loss_weights = None
+    if options.loss_weights == 'balanced':
+        loss_weights = [0] * (len(tags_field.vocab) - 1)
+
+    model = build(options, fields_tuples, loss_weights)
     load_state(path, model)
     return model
 

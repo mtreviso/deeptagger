@@ -1,7 +1,7 @@
-import numpy as np
-
 from argparse import Namespace
 from pathlib import Path
+
+import numpy as np
 
 from deeptagger import config_utils
 from deeptagger.dataset import dataset, fields

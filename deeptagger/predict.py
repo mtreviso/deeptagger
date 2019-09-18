@@ -19,10 +19,11 @@ def run(options):
         raise Exception('You should inform a path to test data or a text.')
 
     if options.test_path is not None and options.text is not None:
-        raise Exception('You cant inform both a path to test data or a text.')
+        raise Exception('You cant inform both a path to test data and a text.')
 
     dataset_iter = None
-    if options.test_path is not None:
+
+    if options.test_path is not None and options.text is None:
         logging.info('Building test dataset: {}'.format(options.test_path))
         test_tuples = list(filter(lambda x: x[0] != 'tags', fields_tuples))
         test_dataset = dataset.build(options.test_path, test_tuples, options)
@@ -31,7 +32,7 @@ def run(options):
         dataset_iter = iterator.build(test_dataset, options.gpu_id,
                                       options.dev_batch_size, is_train=False)
 
-    if options.text is not None:
+    if options.text is not None and options.test_path is None:
         logging.info('Preparing text...')
         test_tuples = list(filter(lambda x: x[0] != 'tags', fields_tuples))
         test_dataset = dataset.build_texts(options.text, test_tuples, options)
@@ -46,16 +47,18 @@ def run(options):
     logging.info('Loading model...')
     model = models.load(options.load, fields_tuples)
 
+    logging.info('Predicting...')
     predicter = Predicter(dataset_iter, model)
     predictions = predicter.predict(options.prediction_type)
 
+    logging.info('Preparing to save...')
     if options.prediction_type == 'classes':
         prediction_tags = transform_classes_to_tags(tags_field, predictions)
         predictions_str = transform_predictions_to_text(prediction_tags)
-    elif options.prediction_type == 'probas':
+    else:
         predictions_str = transform_predictions_to_text(predictions)
 
-    if options.text is None:
+    if options.test_path is not None:
         save_predictions(options.output_dir, predictions_str)
     else:
         logging.info(options.text)

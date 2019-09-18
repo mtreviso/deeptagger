@@ -5,6 +5,7 @@ from torch.nn.utils.rnn import pack_padded_sequence as pack
 from torch.nn.utils.rnn import pad_packed_sequence as unpack
 
 from deeptagger import constants
+from deeptagger.initialization import init_xavier, init_kaiming
 from deeptagger.models.model import Model
 
 
@@ -22,23 +23,19 @@ class RCNN(Model):
         self.max_pool = None
         self.is_bidir = None
         self.sum_bidir = None
-        self.gru = None
+        self.rnn_type = None
+        self.rnn = None
         self.hidden = None
-        self.dropout_gru = None
+        self.dropout_rnn = None
         self.linear_out = None
         self.relu = None
         self.sigmoid = None
 
-    def build(self, options):
-        # prefix_embeddings_size = options.prefix_embeddings_size
-        # suffix_embeddings_size = options.suffix_embeddings_size
-        # caps_embeddings_size = options.caps_embeddings_size
+    def build(self, options, loss_weights=None):
+
         hidden_size = options.hidden_size[0]
-        loss_weights = None
-        if options.loss_weights == 'balanced':
-            # TODO
-            # loss_weights = calc_balanced(loss_weights, tags_field)
-            loss_weights = torch.FloatTensor(loss_weights)
+        if loss_weights is not None:
+            loss_weights = torch.tensor(loss_weights).float()
 
         word_embeddings = None
         if self.words_field.vocab.vectors is not None:
@@ -56,7 +53,6 @@ class RCNN(Model):
         features_size = options.word_embeddings_size
         if options.freeze_embeddings:
             self.word_emb.weight.requires_grad = False
-            self.word_emb.bias.requires_grad = False
 
         if self.use_handcrafed:
             self.handcrafted.build(options)
@@ -72,16 +68,24 @@ class RCNN(Model):
 
         self.is_bidir = options.bidirectional
         self.sum_bidir = options.sum_bidir
-        self.gru = nn.GRU(options.conv_size // options.pool_length +
-                          options.pool_length // 2,
-                          hidden_size,
-                          bidirectional=self.is_bidir,
-                          batch_first=True)
+        self.rnn_type = options.rnn_type
+
+        rnn_class = nn.RNN
+        if self.rnn_type == 'gru':
+            rnn_class = nn.GRU
+        elif self.rnn_type == 'lstm':
+            rnn_class = nn.LSTM
+
+        self.rnn = rnn_class(features_size,
+                             hidden_size,
+                             bidirectional=self.is_bidir,
+                             batch_first=True)
         self.hidden = None
-        self.dropout_gru = nn.Dropout(options.dropout)
+        self.dropout_rnn = nn.Dropout(options.dropout)
 
         n = 2 if self.is_bidir else 1
         n = 1 if self.sum_bidir else n
+
         self.linear_out = nn.Linear(n * hidden_size, self.nb_classes)
 
         self.relu = torch.nn.ReLU()
@@ -95,34 +99,32 @@ class RCNN(Model):
         self.is_built = True
 
     def init_weights(self):
-        torch.nn.init.xavier_uniform_(self.cnn_1d.weight)
-        torch.nn.init.constant_(self.cnn_1d.bias, 0.)
-        torch.nn.init.xavier_uniform_(self.gru.weight_ih_l0)
-        torch.nn.init.xavier_uniform_(self.gru.weight_hh_l0)
-        torch.nn.init.constant_(self.gru.bias_ih_l0, 0.)
-        torch.nn.init.constant_(self.gru.bias_hh_l0, 0.)
-        torch.nn.init.xavier_uniform_(self.linear_out.weight)
-        torch.nn.init.constant_(self.linear_out.bias, 0.)
-        if self.is_bidir:
-            torch.nn.init.xavier_uniform_(self.gru.weight_ih_l0_reverse)
-            torch.nn.init.xavier_uniform_(self.gru.weight_hh_l0_reverse)
-            torch.nn.init.constant_(self.gru.bias_ih_l0_reverse, 0.)
-            torch.nn.init.constant_(self.gru.bias_hh_l0_reverse, 0.)
+        if self.cnn_1d is not None:
+            init_kaiming(self.cnn_1d, dist='uniform', nonlinearity='relu')
+        if self.rnn is not None:
+            init_xavier(self.rnn, dist='uniform')
+        if self.linear_out is not None:
+            init_xavier(self.linear_out, dist='uniform')
 
-    def init_hidden(self, batch_size, hidden_size):
-        # The axes semantics are (num_layers, minibatch_size, hidden_dim)
-        num_layers = 2 if self.is_bidir else 1
-        return torch.zeros(num_layers, batch_size, hidden_size)
+    def init_hidden(self, batch_size, hidden_size, device=None):
+        # The axes semantics are (nb_layers, minibatch_size, hidden_dim)
+        nb_layers = 2 if self.is_bidir else 1
+
+        if self.rnn_type == 'lstm':
+            return (torch.zeros(nb_layers, batch_size, hidden_size).to(device),
+                    torch.zeros(nb_layers, batch_size, hidden_size).to(device))
+        else:
+            return torch.zeros(nb_layers, batch_size, hidden_size).to(device)
 
     def forward(self, batch):
         assert self.is_built
 
+        batch_size = batch.words.shape[0]
+        device = batch.words.device
+
         h = batch.words
         mask = h != constants.PAD_ID
         lengths = mask.int().sum(dim=-1)
-
-        # initialize GRU hidden state
-        self.hidden = self.init_hidden(h.shape[0], self.gru.hidden_size)
 
         # (bs, ts) -> (bs, ts, emb_dim)
         h = self.word_emb(h)
@@ -148,16 +150,22 @@ class RCNN(Model):
         # (bs, ts, conv_size) -> (bs, ts, pool_size)
         h = self.max_pool(h)
 
+        # initialize RNN hidden state
+        self.hidden = self.init_hidden(
+            batch_size, self.rnn.hidden_size, device=device
+        )
+
         # (bs, ts, pool_size) -> (bs, ts, hidden_size)
-        h = pack(h, lengths, batch_first=True)
-        h, self.hidden = self.gru(h, self.hidden)
+        h = pack(h, lengths, batch_first=True, enforce_sorted=False)
+        h, self.hidden = self.rnn(h, self.hidden)
         h, _ = unpack(h, batch_first=True)
-        h = self.dropout_gru(h)
 
         # if you'd like to sum instead of concatenate:
         if self.sum_bidir:
             h = (h[:, :, :self.gru.hidden_size] +
                  h[:, :, self.gru.hidden_size:])
+
+        h = self.dropout_gru(h)
 
         # (bs, ts, hidden_size) -> (bs, ts, nb_classes)
         h = F.log_softmax(self.linear_out(h), dim=-1)

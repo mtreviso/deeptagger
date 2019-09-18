@@ -1,0 +1,9 @@
+torch>=1.2.0
+numpy
+torchtext
+pytest
+future
+pyyaml
+setuptools
+six
+typing

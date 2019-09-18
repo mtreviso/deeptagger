@@ -8,11 +8,9 @@ def build(dataset, device, batch_size, is_train):
         dataset=dataset,
         batch_size=batch_size,
         repeat=False,
-        # sorts the data within each minibatch in decreasing order according
-        # set to true if you want use pack_padded_sequences
         sort_key=dataset.sort_key,
         sort=False,
-        sort_within_batch=True,
+        sort_within_batch=False,
         # shuffle batches
         shuffle=is_train,
         device=device,

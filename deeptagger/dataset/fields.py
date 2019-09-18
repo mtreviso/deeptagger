@@ -155,6 +155,7 @@ class AffixesField(Field):
                          pad_token=constants.PAD,
                          batch_first=True,
                          **kwargs)
+        self.vocab_cls = Vocabulary
 
 
 CapsField = AffixesField

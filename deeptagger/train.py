@@ -21,6 +21,7 @@ def run(options):
 
     logging.info('Building train corpus: {}'.format(options.train_path))
     train_dataset = dataset.build(options.train_path, fields_tuples, options)
+
     logging.info('Building train iterator...')
     train_iter = iterator.build(train_dataset,
                                 options.gpu_id,
@@ -51,29 +52,49 @@ def run(options):
 
     datasets = [train_dataset, dev_dataset, test_dataset]
     datasets = list(filter(lambda x: x is not None, datasets))
-    if options.load:
+
+    # BUILD
+    if not options.load:
+        logging.info('Building vocabulary...')
+        fields.build_vocabs(fields_tuples, train_dataset, datasets, options)
+        loss_weights = None
+        if options.loss_weights == 'balanced':
+            loss_weights = train_dataset.get_loss_weights()
+        logging.info('Building model...')
+        model = models.build(options, fields_tuples, loss_weights)
+        logging.info('Building optimizer...')
+        optim = optimizer.build(options, model.parameters())
+        logging.info('Building scheduler...')
+        sched = scheduler.build(options, optim)
+
+    # OR LOAD
+    else:
         logging.info('Loading vocabularies...')
         fields.load_vocabs(options.load, fields_tuples)
-        logging.info('Word vocab size: {}'.format(len(words_field.vocab)))
-        logging.info('Tag vocab size: {}'.format(len(tags_field.vocab)))
         logging.info('Loading model...')
         model = models.load(options.load, fields_tuples)
         logging.info('Loading optimizer...')
         optim = optimizer.load(options.load, model.parameters())
         logging.info('Loading scheduler...')
         sched = scheduler.load(options.load, optim)
-    else:
-        logging.info('Building vocabulary...')
-        fields.build_vocabs(fields_tuples, train_dataset, datasets, options)
-        logging.info('Word vocab size: {}'.format(len(words_field.vocab)))
-        logging.info('Tag vocab size: {}'.format(len(tags_field.vocab)))
-        logging.info('Building model...')
-        model = models.build(options, fields_tuples)
-        logging.info('Building optimizer...')
-        optim = optimizer.build(options, model.parameters())
-        logging.info('Building scheduler...')
-        sched = scheduler.build(options, optim)
 
+    # STATS
+    logging.info('Word vocab size: {}'.format(len(words_field.vocab)))
+    logging.info('Tag vocab size: {}'.format(len(tags_field.vocab) - 1))
+    logging.info('Number of training examples: {}'.format(len(train_dataset)))
+    if dev_dataset:
+        logging.info('Number of dev examples: {}'.format(len(dev_dataset)))
+    if test_dataset:
+        logging.info('Number of test examples: {}'.format(len(test_dataset)))
+
+    logging.info('Model info: ')
+    logging.info(str(model))
+    logging.info('Optimizer info: ')
+    logging.info(str(optim))
+    logging.info('Scheduler info: ')
+    logging.info(str(sched))
+
+    # TRAIN
     logging.info('Building trainer...')
     trainer = Trainer(train_iter, model, optim, sched, options,
                       dev_iter=dev_iter, test_iter=test_iter)
@@ -84,6 +105,7 @@ def run(options):
 
     trainer.train()
 
+    # SAVE
     if options.save:
         logging.info('Saving path: {}'.format(options.save))
         config_path = Path(options.save)

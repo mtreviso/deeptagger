@@ -19,7 +19,9 @@ def build(path, fields_tuples, options):
 
 
 def build_texts(texts, fields_tuples, options):
-    corpus = Corpus(fields_tuples)
+    def filter_len(x):
+        return options.min_length <= len(x.words) <= options.max_length
+    corpus = Corpus(fields_tuples, options.punctuations)
     corpus.add_texts(texts)
     if (options.use_prefixes or
             options.use_suffixes or
@@ -28,7 +30,7 @@ def build_texts(texts, fields_tuples, options):
                             options.prefix_max_length,
                             options.suffix_min_length,
                             options.suffix_max_length)
-    return PoSDataset(corpus)
+    return PoSDataset(corpus, filter_pred=filter_len)
 
 
 class PoSDataset(LazyDataset):
@@ -47,7 +49,18 @@ class PoSDataset(LazyDataset):
                 filter_pred(example) is True, or use all examples if None.
                 Default is None.
         """
-        # ensure that examples is not a generator
+        # if we use LazyBucketIterator instead:
+        # examples = iter(corpus)
         examples = list(corpus)
         fields = corpus.attr_fields
         super().__init__(examples, fields, filter_pred)
+
+    def get_loss_weights(self):
+        from sklearn.utils.class_weight import compute_class_weight
+        tags_vocab = self.fields['tags'].vocab.stoi
+        y = []
+        for ex in self.examples:
+            ex_classes = [tags_vocab[t] for t in ex.tags]
+            y.extend(ex_classes)
+        classes = list(set(y))
+        return compute_class_weight('balanced', classes, y)

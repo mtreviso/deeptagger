@@ -72,10 +72,12 @@ class Stats(object):
         return len(self.golds)
 
     def update(self, loss, preds, golds):
-        mask = golds != self.mask_id
-        pred_probs = torch.exp(preds)
+        pred_probs = torch.exp(preds)  # assuming log softmax at the nn output
         pred_classes = pred_probs.argmax(dim=-1)
         self.loss += loss
+
+        # unmask & flatten predictions and gold labels before storing them
+        mask = golds != self.mask_id
         self.pred_probs.append(unroll(unmask(pred_probs, mask)))
         self._pred_classes_sent.append(unmask(pred_classes, mask))
         self.pred_classes.append(unroll(self._pred_classes_sent[-1]))

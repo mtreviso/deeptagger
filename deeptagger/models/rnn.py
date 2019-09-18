@@ -27,14 +27,11 @@ class RNN(Model):
         self.selu = None
         self.sigmoid = None
 
-    def build(self, options):
+    def build(self, options, loss_weights=None):
         hidden_size = options.hidden_size[0]
 
-        loss_weights = None
-        if options.loss_weights == 'balanced':
-            # TODO
-            # loss_weights = calc_balanced(loss_weights, tags_field)
-            loss_weights = torch.FloatTensor(loss_weights)
+        if loss_weights is not None:
+            loss_weights = torch.tensor(loss_weights).float()
 
         word_embeddings = None
         if self.words_field.vocab.vectors is not None:
@@ -55,7 +52,6 @@ class RNN(Model):
 
         if options.freeze_embeddings:
             self.word_emb.weight.requires_grad = False
-            self.word_emb.bias.requires_grad = False
 
         self.is_bidir = options.bidirectional
         self.sum_bidir = options.sum_bidir
@@ -89,29 +85,37 @@ class RNN(Model):
         self.is_built = True
 
     def init_weights(self):
-        pass
+        if self.cnn_1d is not None:
+            init_kaiming(self.cnn_1d, dist='uniform', nonlinearity='relu')
+        if self.rnn is not None:
+            init_xavier(self.rnn, dist='uniform')
+        if self.linear_out is not None:
+            init_xavier(self.linear_out, dist='uniform')
 
-    def init_hidden(self, batch_size, hidden_size):
-        # The axes semantics are (num_layers, minibatch_size, hidden_dim)
-        num_layers = 2 if self.is_bidir else 1
+    def init_hidden(self, batch_size, hidden_size, device=None):
+        # The axes semantics are (nb_layers, minibatch_size, hidden_dim)
+        nb_layers = 2 if self.is_bidir else 1
         if self.rnn_type == 'lstm':
-            return (torch.zeros(num_layers, batch_size, hidden_size),
-                    torch.zeros(num_layers, batch_size, hidden_size))
+            return (torch.zeros(nb_layers, batch_size, hidden_size).to(device),
+                    torch.zeros(nb_layers, batch_size, hidden_size).to(device))
         else:
-            return torch.zeros(num_layers, batch_size, hidden_size)
+            return torch.zeros(nb_layers, batch_size, hidden_size).to(device)
 
     def forward(self, batch):
         assert self.is_built
 
+        batch_size = batch.words.shape[0]
+        device = batch.words.device
+
         # (ts, bs) -> (bs, ts)
-        bs, ts = batch.words.shape
         h = batch.words
         mask = h != constants.PAD_ID
         lengths = mask.int().sum(dim=-1)
 
         # initialize GRU hidden state
-        self.hidden = self.init_hidden(batch.words.shape[0],
-                                       self.rnn.hidden_size)
+        self.hidden = self.init_hidden(
+            batch_size, self.rnn.hidden_size, device=device
+        )
 
         # (bs, ts) -> (bs, ts, emb_dim)
         h = self.word_emb(h)
@@ -125,7 +129,7 @@ class RNN(Model):
             h = torch.cat(feats, dim=-1)
 
         # (bs, ts, pool_size) -> (bs, ts, hidden_size)
-        h = pack(h, lengths, batch_first=True)
+        h = pack(h, lengths, batch_first=True, enforce_sorted=False)
         h, self.hidden = self.rnn(h, self.hidden)
         h, _ = unpack(h, batch_first=True)
 
